@@ -1,0 +1,36 @@
+@config "../tailwind.config.js";
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html {
+    font-family: "Inter", system-ui, sans-serif;
+  }
+  body {
+    @apply bg-background text-dark antialiased;
+  }
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-indigo-100;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-indigo-600;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-primary hover:text-primary;
+  }
+  .btn-warning {
+    @apply inline-flex items-center justify-center rounded-xl bg-red-500 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-red-600;
+  }
+  .card {
+    @apply rounded-2xl bg-white p-5 shadow-soft transition hover:shadow-lg;
+  }
+}
+
+@utility shadow-soft {
+  box-shadow: 0 10px 20px -10px rgba(15, 23, 42, 0.25);
+}
