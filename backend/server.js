@@ -33,6 +33,11 @@ app.use("/api/research-papers", require("./routes/researchPaper.routes"));
 app.use("/api/grants", require("./routes/grant.routes"));
 app.use("/api/editorial-boards", require("./routes/editorialBoard.routes"));
 app.use("/api/consultancies", require("./routes/consultancy.routes"));
+app.use("/api/journal-publications", require("./routes/journalPublication.routes"));
+app.use("/api/conference-publications", require("./routes/conferencePublication.routes"));
+app.use("/api/book-chapters", require("./routes/bookChapter.routes"));
+app.use("/api/patents", require("./routes/patent.routes"));
+app.use("/api/copyrights", require("./routes/copyright.routes"));
 
 app.use("/api", require("./routes/testRoutes"));
 

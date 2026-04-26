@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/common/DashboardLayout";
-import ProfileView from "../../components/common/ProfileView";
+import StudentProfileView from "../../components/student/StudentProfileView";
 import PasswordChangeModal from "../../components/common/PasswordChangeModal";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -69,9 +69,8 @@ export default function StudentProfilePage() {
       }}
     >
       <div className="max-w-4xl">
-        <ProfileView
+        <StudentProfileView
           profile={profileData}
-          role="student"
           onUpdate={handleProfileUpdate}
           loading={loading}
         />

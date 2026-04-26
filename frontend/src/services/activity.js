@@ -1,7 +1,7 @@
 import API from "./api";
 
-export async function getActivities() {
-  const response = await API.get("/activities");
+export async function getActivities(params = {}) {
+  const response = await API.get("/activities", { params });
   return response.data;
 }
 

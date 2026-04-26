@@ -7,6 +7,7 @@ export default function ActivityFormModal({ isOpen, onClose, onSubmit, initialDa
     semester: "odd",
     activityType: "Workshop",
     activityLevel: "Departmental",
+    participationType: "Organised",
     activityMode: "Offline",
     fromDate: "",
     toDate: "",
@@ -18,6 +19,9 @@ export default function ActivityFormModal({ isOpen, onClose, onSubmit, initialDa
     coordinators: "",
     resourcePersons: "",
     description: "",
+    keyFocusedAreas: "",
+    targetAudience: "",
+    otherActivityType: "",
   });
 
   useEffect(() => {
@@ -36,6 +40,7 @@ export default function ActivityFormModal({ isOpen, onClose, onSubmit, initialDa
         semester: "odd",
         activityType: "Workshop",
         activityLevel: "Departmental",
+        participationType: "Organised",
         activityMode: "Offline",
         fromDate: "",
         toDate: "",
@@ -47,6 +52,9 @@ export default function ActivityFormModal({ isOpen, onClose, onSubmit, initialDa
         coordinators: "",
         resourcePersons: "",
         description: "",
+        keyFocusedAreas: "",
+        targetAudience: "",
+        otherActivityType: "",
       });
     }
   }, [initialData, isOpen]);
@@ -112,7 +120,23 @@ export default function ActivityFormModal({ isOpen, onClose, onSubmit, initialDa
                 <option value="Project Exhibition">Project Exhibition</option>
                 <option value="Competition">Competition</option>
                 <option value="Guest Lecture">Guest Lecture</option>
+                <option value="FDP">FDP</option>
                 <option value="Other">Other</option>
+              </select>
+            </div>
+
+            {formData.activityType === "Other" && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Specify Other Activity Type</label>
+                <input required name="otherActivityType" value={formData.otherActivityType} onChange={handleChange} className="input w-full" placeholder="e.g. Hackathon" />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Participation Type</label>
+              <select name="participationType" value={formData.participationType} onChange={handleChange} className="input w-full">
+                <option value="Organised">Organised</option>
+                <option value="Attended">Attended</option>
               </select>
             </div>
 
@@ -170,6 +194,16 @@ export default function ActivityFormModal({ isOpen, onClose, onSubmit, initialDa
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Certifying Institute</label>
               <input name="certifyingInstitute" value={formData.certifyingInstitute} onChange={handleChange} className="input w-full" placeholder="Organization name" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Key Focused Areas</label>
+              <input name="keyFocusedAreas" value={formData.keyFocusedAreas} onChange={handleChange} className="input w-full" placeholder="e.g. AI, Web Development" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Target Audience</label>
+              <input name="targetAudience" value={formData.targetAudience} onChange={handleChange} className="input w-full" placeholder="e.g. TE Students, Faculty" />
             </div>
 
             <div className="md:col-span-2">

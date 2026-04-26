@@ -28,7 +28,7 @@ export default function AdminDashboard() {
   const [isViewTeacherModalOpen, setIsViewTeacherModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [isTeacherUpdating, setIsTeacherUpdating] = useState(false);
-  
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -150,9 +150,9 @@ export default function AdminDashboard() {
         navigate("/login");
       }}
     >
-      <CreateDepartmentModal 
-        isOpen={isDepModalOpen} 
-        onClose={() => setIsDepModalOpen(false)} 
+      <CreateDepartmentModal
+        isOpen={isDepModalOpen}
+        onClose={() => setIsDepModalOpen(false)}
         onSubmit={handleCreateDepartment}
       />
 
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
         onClose={() => setIsViewTeacherModalOpen(false)}
         teacher={selectedTeacher}
       />
-      
+
       {(isDashboard || isReports) && (
         <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
           {stats.map((stat) => <Card key={stat.title} {...stat} className={stat.className} />)}
@@ -221,16 +221,16 @@ export default function AdminDashboard() {
                     <div>
                       <p className="font-semibold text-slate-900">{dept.departmentName}</p>
                       <p className="text-xs text-slate-500">
-                        {dept.departmentCode} • {dept.collegeName}
+                        {dept.departmentUid} • {dept.collegeName}
                       </p>
                     </div>
                     <div className="flex gap-2">
-                       <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-600 uppercase">
-                         {dept.totalTeachers || 0} Faculty
-                       </span>
-                       <span className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-bold text-emerald-700 uppercase">
-                         {dept.studentCount || 0} Students
-                       </span>
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-600 uppercase">
+                        {dept.totalTeachers || 0} Faculty
+                      </span>
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-bold text-emerald-700 uppercase">
+                        {dept.studentCount || 0} Students
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -291,7 +291,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded-md font-medium">{dept.departmentCode}</span>
+                    <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded-md font-medium">{dept.departmentUid}</span>
                     <div className="flex items-center gap-3 text-slate-500 font-medium">
                       <div className="flex items-center gap-1">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -350,37 +350,37 @@ export default function AdminDashboard() {
                     </div>
                     {/* Action Buttons */}
                     <div className="bg-slate-50 p-1.5 rounded-lg border border-slate-100   transition-opacity flex gap-1 shadow-sm">
-                       <button 
-                         onClick={() => openViewModal(teacher)}
-                         className="p-1.5 hover:bg-white text-emerald-600 rounded-md transition-all "
-                         title="View Details"
-                       >
-                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                         </svg>
-                       </button>
-                       <button 
-                         onClick={() => openEditModal(teacher)}
-                         className="p-1.5 hover:bg-white  text-indigo-600 rounded-md transition-all "
-                         title="Edit Teacher"
-                       >
-                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                         </svg>
-                       </button>
-                       <button 
-                         onClick={() => handleDeleteTeacher(teacher._id)}
-                         className="p-1.5 hover:bg-white  text-red-600 rounded-md transition-all  "
-                         title="Delete Teacher"
-                       >
-                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                         </svg>
-                       </button>
+                      <button
+                        onClick={() => openViewModal(teacher)}
+                        className="p-1.5 hover:bg-white text-emerald-600 rounded-md transition-all "
+                        title="View Details"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => openEditModal(teacher)}
+                        className="p-1.5 hover:bg-white  text-indigo-600 rounded-md transition-all "
+                        title="Edit Teacher"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTeacher(teacher._id)}
+                        className="p-1.5 hover:bg-white  text-red-600 rounded-md transition-all  "
+                        title="Delete Teacher"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                   {/* Professional Information of Teacher */}
+                  {/* Professional Information of Teacher */}
                   <div className="space-y-4 flex-1 mb-3">
                     <div className="flex items-center justify-between py-2 border-b border-slate-20 uppercase tracking-wider text-[10px] font-bold text-slate-800">
                       <span>Quick Information</span>
@@ -401,7 +401,7 @@ export default function AdminDashboard() {
                       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact</span>
                       <span className="text-xs font-bold text-slate-700">+91 {teacher.contactNumber || "Not Provided"}</span>
                     </div>
-                    
+
                   </div>
                   {/* Designations assigned */}
                   <div className="pt-4 border-t border-gray-400 flex flex-wrap gap-1.5">

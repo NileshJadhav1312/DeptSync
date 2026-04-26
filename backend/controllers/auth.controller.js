@@ -26,21 +26,35 @@ function formatUserResponse(user) {
     role: user.role,
     gender: user.gender || "",
     dateOfBirth: user.dateOfBirth || null,
+    joinDate: user.joinDate || null,
+    profilePicture: user.profilePicture || "",
     contactNumber: user.contactNumber || "",
     alternateContactNumber: user.alternateContactNumber || "",
-    // Teacher specific
-    designation: user.designation || "",
+    panNumber: user.panNumber || "",
+    aadharNumber: user.aadharNumber || "",
+    employeeId: user.employeeId || "",
     designations: user.designations || [],
+    // Teacher specific
+    collegeName: user.collegeName || "",
+    highestQualification: user.highestQualification || "",
     qualification: user.qualification || "",
     experience: user.experience || null,
+    experienceYears: user.experienceYears || 0,
+    experienceMonths: user.experienceMonths || 0,
+    industryExperienceYears: user.industryExperienceYears || 0,
+    industryExperienceMonths: user.industryExperienceMonths || 0,
+    totalExperienceYears: user.totalExperienceYears || 0,
+    totalExperienceMonths: user.totalExperienceMonths || 0,
     specialization: user.specialization || "",
     departmentId: user.departmentId || null,
     departmentName: user.departmentName || "",
-    departmentCode: user.departmentCode || "",
-    collegeName: user.collegeName || "",
+    departmentUid: user.departmentUid || "",
+    createdBy: user.createdBy || null,
+    createdByName: user.createdByName || "",
+    isActive: user.isActive ?? true,
+    createdAt: user.createdAt || null,
+    updatedAt: user.updatedAt || null,
     // Admin specific
-    post: user.post || "",
-    employeeId: user.employeeId || "",
     departments: user.departments || [],
     // Student specific
     prnNumber: user.prnNumber || "",
@@ -56,7 +70,7 @@ async function signupAdmin(req, res) {
       firstName,
       lastName,
       gender,
-      post,
+      designations,
       email,
       contactNumber,
       alternateContactNumber,
@@ -71,15 +85,15 @@ async function signupAdmin(req, res) {
       !firstName ||
       !lastName ||
       !gender ||
-      !post ||
       !email ||
       !contactNumber ||
       !collegeName ||
       !username ||
       !password ||
-      !confirmPassword
+      !confirmPassword ||
+      !employeeId
     ) {
-      return res.status(400).json({ message: "Please fill all required admin fields." });
+      return res.status(400).json({ message: "Please fill all required admin fields (including employee ID)." });
     }
 
     if (password !== confirmPassword) {
@@ -88,13 +102,12 @@ async function signupAdmin(req, res) {
 
     const emailKey = email.trim().toLowerCase();
     const usernameKey = username.trim();
-    const duplicateQuery = [{ email: emailKey }, { username: usernameKey }];
+    const employeeIdKey = employeeId.trim();
 
-    if (employeeId?.trim()) {
-      duplicateQuery.push({ employeeId: employeeId.trim() });
-    }
+    const existingAdmin = await Admin.findOne({
+      $or: [{ email: emailKey }, { username: usernameKey }, { employeeId: employeeIdKey }],
+    });
 
-    const existingAdmin = await Admin.findOne({ $or: duplicateQuery });
     if (existingAdmin) {
       return res.status(409).json({
         message: "Admin already exists with this email, username, or employee ID.",
@@ -105,14 +118,14 @@ async function signupAdmin(req, res) {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       gender,
-      post: post.trim(),
+      designations: Array.isArray(designations) ? designations : (designations ? [designations] : []),
       email: emailKey,
       contactNumber: contactNumber.trim(),
       alternateContactNumber: alternateContactNumber?.trim() || "",
       collegeName: collegeName.trim(),
       username: usernameKey,
       password,
-      employeeId: employeeId?.trim() || undefined,
+      employeeId: employeeIdKey,
     });
 
     const token = createToken(admin);
@@ -173,7 +186,7 @@ async function loginTeacher(req, res) {
     const identifier = email.trim();
     const identifierRegex = new RegExp(`^${escapeRegex(identifier)}$`, "i");
     const teacher = await Teacher.findOne({
-      $or: [{ email: identifier.toLowerCase() }, { username: identifierRegex }],
+      $or: [{ email: identifier.toLowerCase() }, { username: identifierRegex }, { employeeId: identifierRegex }],
     });
 
     if (!teacher) {
@@ -350,39 +363,119 @@ async function getAdminProfile(req, res) {
 async function updateTeacherProfile(req, res) {
   try {
     const teacherId = req.params.id || req.body.teacherId;
-    const { firstName, lastName, gender, dateOfBirth, designation, qualification, experience, specialization, contactNumber, alternateContactNumber } = req.body;
+    const {
+      firstName,
+      lastName,
+      gender,
+      dateOfBirth,
+      joinDate,
+      profilePicture,
+      qualification,
+      highestQualification,
+      experience,
+      experienceYears,
+      experienceMonths,
+      industryExperienceYears,
+      industryExperienceMonths,
+      totalExperienceYears,
+      totalExperienceMonths,
+      specialization,
+      contactNumber,
+      alternateContactNumber,
+      panNumber,
+      aadharNumber,
+      employeeId,
+      username,
+      email,
+      designations,
+      isActive,
+    } = req.body;
 
-    if (!teacherId) {
-      return res.status(400).json({ message: "Teacher ID is required." });
+      if (!teacherId) {
+        return res.status(400).json({ message: "Teacher ID is required." });
+      }
+  
+      const existingTeacher = await Teacher.findById(teacherId);
+      if (!existingTeacher) {
+        return res.status(404).json({ message: "Teacher not found." });
+      }
+
+      const updateData = {};
+
+      if (firstName !== undefined) updateData.firstName = firstName ? firstName.trim() : "";
+      if (lastName !== undefined) updateData.lastName = lastName ? lastName.trim() : "";
+      if (gender !== undefined) updateData.gender = gender ? gender.toLowerCase() : undefined;
+      if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth || null;
+      if (joinDate !== undefined) updateData.joinDate = joinDate || null;
+      if (profilePicture !== undefined) updateData.profilePicture = profilePicture ? profilePicture.trim() : "";
+      if (qualification !== undefined) updateData.qualification = qualification ? qualification.trim() : "";
+      if (highestQualification !== undefined) {
+        updateData.highestQualification = highestQualification ? highestQualification.trim() : "";
+      }
+      if (specialization !== undefined) updateData.specialization = specialization ? specialization.trim() : "";
+      if (contactNumber !== undefined) updateData.contactNumber = contactNumber ? contactNumber.trim() : "";
+      if (alternateContactNumber !== undefined) {
+        updateData.alternateContactNumber = alternateContactNumber ? alternateContactNumber.trim() : "";
+      }
+      if (panNumber !== undefined) updateData.panNumber = panNumber ? panNumber.trim().toUpperCase() : "";
+      if (aadharNumber !== undefined) updateData.aadharNumber = aadharNumber ? aadharNumber.trim() : "";
+      if (employeeId !== undefined && employeeId) updateData.employeeId = employeeId.trim();
+      if (username !== undefined && username) updateData.username = username.trim();
+      if (email !== undefined && email) updateData.email = email.trim().toLowerCase();
+      if (designations !== undefined) {
+        updateData.designations = Array.isArray(designations)
+          ? designations
+          : designations
+            ? [designations]
+            : [];
+      }
+      if (isActive !== undefined) updateData.isActive = Boolean(isActive);
+
+      const teachingYears = experienceYears !== undefined
+        ? Number(experienceYears) || 0
+        : existingTeacher.experienceYears || 0;
+      const teachingMonths = experienceMonths !== undefined
+        ? Number(experienceMonths) || 0
+        : existingTeacher.experienceMonths || 0;
+      const industryYears = industryExperienceYears !== undefined
+        ? Number(industryExperienceYears) || 0
+        : existingTeacher.industryExperienceYears || 0;
+      const industryMonths = industryExperienceMonths !== undefined
+        ? Number(industryExperienceMonths) || 0
+        : existingTeacher.industryExperienceMonths || 0;
+
+      if (experience !== undefined) updateData.experience = Number(experience) || 0;
+      if (experienceYears !== undefined) updateData.experienceYears = teachingYears;
+      if (experienceMonths !== undefined) updateData.experienceMonths = teachingMonths;
+      if (industryExperienceYears !== undefined) updateData.industryExperienceYears = industryYears;
+      if (industryExperienceMonths !== undefined) {
+        updateData.industryExperienceMonths = industryMonths;
+      }
+
+      const totalMonthsFromParts = (teachingYears * 12 + teachingMonths) + (industryYears * 12 + industryMonths);
+      updateData.totalExperienceYears = Math.floor(totalMonthsFromParts / 12);
+      updateData.totalExperienceMonths = totalMonthsFromParts % 12;
+      updateData.updatedAt = new Date();
+
+      const teacher = await Teacher.findByIdAndUpdate(
+        teacherId,
+        { $set: updateData },
+        { new: true, runValidators: true, context: "query" },
+      ).select("-password");
+
+      return res.status(200).json({
+        message: "Teacher profile updated successfully.",
+        teacher: formatUserResponse(teacher),
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to update teacher profile.", error: error.message });
     }
-
-    const teacher = await Teacher.findById(teacherId);
-    if (!teacher) {
-      return res.status(404).json({ message: "Teacher not found." });
-    }
-
-    if (firstName !== undefined) teacher.firstName = firstName ? firstName.trim() : "";
-    if (lastName !== undefined) teacher.lastName = lastName ? lastName.trim() : "";
-    if (gender !== undefined) teacher.gender = gender ? gender.toLowerCase() : undefined;
-    if (dateOfBirth !== undefined) teacher.dateOfBirth = dateOfBirth || null;
-    if (qualification !== undefined) teacher.qualification = qualification ? qualification.trim() : "";
-    if (experience !== undefined) teacher.experience = experience;
-    if (specialization !== undefined) teacher.specialization = specialization ? specialization.trim() : "";
-    if (contactNumber !== undefined) teacher.contactNumber = contactNumber ? contactNumber.trim() : "";
-    if (alternateContactNumber !== undefined) teacher.alternateContactNumber = alternateContactNumber ? alternateContactNumber.trim() : "";
-
-    await teacher.save();
-
-    return res.status(200).json({ message: "Teacher profile updated successfully.", teacher: formatUserResponse(teacher) });
-  } catch (error) {
-    return res.status(500).json({ message: "Failed to update teacher profile.", error: error.message });
   }
-}
 
 async function updateAdminProfile(req, res) {
   try {
     const adminId = req.params.id || req.body.adminId;
-    const { firstName, lastName, gender, dateOfBirth, post, contactNumber, alternateContactNumber } = req.body;
+    const { firstName, lastName, gender, dateOfBirth, designations, contactNumber, alternateContactNumber, employeeId } = req.body;
 
     if (!adminId) {
       return res.status(400).json({ message: "Admin ID is required." });
@@ -397,9 +490,10 @@ async function updateAdminProfile(req, res) {
     if (lastName !== undefined) admin.lastName = lastName ? lastName.trim() : "";
     if (gender !== undefined) admin.gender = gender;
     if (dateOfBirth !== undefined) admin.dateOfBirth = dateOfBirth;
-    if (post !== undefined) admin.post = post ? post.trim() : "";
+    if (designations !== undefined) admin.designations = Array.isArray(designations) ? designations : (designations ? [designations] : []);
     if (contactNumber !== undefined) admin.contactNumber = contactNumber ? contactNumber.trim() : "";
     if (alternateContactNumber !== undefined) admin.alternateContactNumber = alternateContactNumber ? alternateContactNumber.trim() : "";
+    if (employeeId !== undefined) admin.employeeId = employeeId ? employeeId.trim() : admin.employeeId;
 
     await admin.save();
 
@@ -499,7 +593,7 @@ async function getStudentProfile(req, res) {
 async function updateStudentProfile(req, res) {
   try {
     const studentId = req.params.id || req.body.studentId;
-    const { firstName, lastName, gender, dateOfBirth, contactNumber, alternateContactNumber } = req.body;
+    const { firstName, lastName, gender, dateOfBirth, contactNumber, alternateContactNumber, username, email, prnNumber, semester} = req.body;
 
     if (!studentId) {
       return res.status(400).json({ message: "Student ID is required." });
@@ -516,6 +610,10 @@ async function updateStudentProfile(req, res) {
     if (dateOfBirth !== undefined) student.dateOfBirth = dateOfBirth || null;
     if (contactNumber !== undefined) student.contactNumber = contactNumber ? contactNumber.trim() : "";
     if (alternateContactNumber !== undefined) student.alternateContactNumber = alternateContactNumber ? alternateContactNumber.trim() : "";
+    if (username !== undefined && username) student.username = username.trim();
+    if (email !== undefined && email) student.email = email.trim().toLowerCase();
+    if (prnNumber !== undefined && prnNumber) student.prnNumber = prnNumber.trim();
+    if (semester !== undefined) student.semester = semester ? Number(semester) : student.semester;
 
     await student.save();
 

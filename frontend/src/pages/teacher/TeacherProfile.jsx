@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/common/DashboardLayout";
-import ProfileView from "../../components/common/ProfileView";
+import TeacherProfileView from "../../components/teacher/TeacherProfileView";
 import PasswordChangeModal from "../../components/common/PasswordChangeModal";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -17,12 +17,6 @@ export default function TeacherProfilePage() {
   const [loading, setLoading] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (user?.id) {
-      fetchProfile();
-    }
-  }, [user?.id]);
-
   const fetchProfile = async () => {
     setLoading(true);
     try {
@@ -35,13 +29,27 @@ export default function TeacherProfilePage() {
     }
   };
 
+  useEffect(() => {
+    if (!user?.id) return;
+
+    (async () => {
+      setLoading(true);
+      try {
+        const response = await getTeacherProfile(user.id);
+        setProfileData(response.teacher);
+      } catch (err) {
+        console.error("Failed to load profile.", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [user?.id]);
+
   const handleProfileUpdate = async (payload) => {
     setLoading(true);
     try {
-      const response = await updateTeacherProfile(user.id, payload);
-      setProfileData(response.teacher);
-    } catch (err) {
-      throw err;
+      await updateTeacherProfile(user.id, payload);
+      await fetchProfile();
     } finally {
       setLoading(false);
     }
@@ -51,8 +59,6 @@ export default function TeacherProfilePage() {
     setLoading(true);
     try {
       await changeTeacherPassword(user.id, payload);
-    } catch (err) {
-      throw err;
     } finally {
       setLoading(false);
     }
@@ -69,9 +75,8 @@ export default function TeacherProfilePage() {
       }}
     >
       <div className="max-w-4xl">
-        <ProfileView
+        <TeacherProfileView
           profile={profileData}
-          role="teacher"
           onUpdate={handleProfileUpdate}
           loading={loading}
         />

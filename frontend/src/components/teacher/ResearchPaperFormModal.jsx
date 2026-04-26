@@ -22,6 +22,8 @@ export default function ResearchPaperFormModal({ isOpen, onClose, onSubmit, init
     keywords: [""],
     affiliation: "",
     status: "published",
+    supportingDocuments: false,
+    supportingDocumentDetails: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -54,6 +56,8 @@ export default function ResearchPaperFormModal({ isOpen, onClose, onSubmit, init
         keywords: [""],
         affiliation: "",
         status: "published",
+        supportingDocuments: false,
+        supportingDocumentDetails: "",
       });
     }
   }, [isOpen, initialData]);
@@ -61,8 +65,8 @@ export default function ResearchPaperFormModal({ isOpen, onClose, onSubmit, init
   if (!isOpen) return null;
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
   };
 
   const handleArrayChange = (index, value, field) => {
@@ -225,6 +229,17 @@ export default function ResearchPaperFormModal({ isOpen, onClose, onSubmit, init
                   <label className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest px-1">Pub. Month</label>
                   <input name="month" value={formData.month} onChange={handleChange} className="w-full px-4 py-2.5 bg-white border border-indigo-100 rounded-xl outline-none focus:ring-4 focus:ring-indigo-500/5" placeholder="May" />
                </div>
+            </div>
+
+            {/* Supporting Documents Section */}
+            <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
+               <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" name="supportingDocuments" checked={formData.supportingDocuments} onChange={handleChange} className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                  <span className="text-sm font-bold text-slate-700">Supporting Documents Uploaded?</span>
+               </label>
+               {formData.supportingDocuments && (
+                 <textarea name="supportingDocumentDetails" value={formData.supportingDocumentDetails} onChange={handleChange} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl h-24 text-sm font-medium" placeholder="Specify docs (Acceptance letter, proof...)" />
+               )}
             </div>
 
           </form>

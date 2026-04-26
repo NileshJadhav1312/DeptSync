@@ -10,8 +10,8 @@ export async function getGeneratedDeptCode() {
   return response.data;
 }
 
-export async function getTeachers() {
-  const response = await API.get("/admin/teachers");
+export async function getTeachers(params = {}) {
+  const response = await API.get("/admin/teachers", { params });
   return response.data;
 }
 

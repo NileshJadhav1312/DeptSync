@@ -3,9 +3,19 @@ const Admin = require("../models/admin.model");
 const Department = require("../models/department.model");
 const Teacher = require("../models/teacher.model");
 const Student = require("../models/student.model");
+const ActivityDetails = require("../models/activityDetails.model");
+const ResearchPaper = require("../models/researchPaper.model");
+const BookPublication = require("../models/bookPublication.model");
+const Grant = require("../models/grant.model");
+const Consultancy = require("../models/consultancy.model");
+const Achievement = require("../models/achievement.model");
+const Commitee = require("../models/comittee.model");
+const EditorialBoard = require("../models/editorialBoard.model");
+const JournalPublication = require("../models/journalPublication.model");
+const ConferencePublication = require("../models/conferencePublication.model");
+const BookChapter = require("../models/bookChapter.model");
 
-async function resolveAdminId(createdBy)
-{
+async function resolveAdminId(createdBy) {
   if (!createdBy) return null;
   if (mongoose.Types.ObjectId.isValid(createdBy)) return createdBy;
 
@@ -18,21 +28,15 @@ async function resolveAdminId(createdBy)
 
 async function createDepartment(req, res) {
   try {
-    const { departmentName, departmentCode, collegeName, createdBy, createdByName } = req.body;
+    const { departmentName, collegeName, createdBy, createdByName } = req.body;
 
     const resolvedCreatedBy = await resolveAdminId(createdBy);
-    if (!departmentName || !departmentCode || !collegeName || !resolvedCreatedBy) {
+    if (!departmentName || !collegeName || !resolvedCreatedBy) {
       return res.status(400).json({ message: "Missing or invalid department fields (createdBy)." });
-    }
-
-    const exists = await Department.findOne({ departmentCode: departmentCode.trim().toUpperCase() });
-    if (exists) {
-      return res.status(409).json({ message: "Department with this code already exists." });
     }
 
     const department = await Department.create({
       departmentName: departmentName.trim(),
-      departmentCode: departmentCode.trim().toUpperCase(),
       collegeName: collegeName.trim(),
       createdBy: resolvedCreatedBy,
       createdByName: createdByName || "Admin",
@@ -45,19 +49,22 @@ async function createDepartment(req, res) {
   }
 }
 
+// This is largely useless now since departmentUid is auto-generated on save. 
+// We may keep it to return a dummy code or remove its route.
 async function generateDeptCode(req, res) {
   try {
-    const code = await Department.generateUniqueCode();
+    const crypto = require("crypto");
+    const code = crypto.randomBytes(5).toString("base64url").replace(/[^A-Z0-9]/gi, "").toUpperCase().slice(0, 8);
     return res.status(200).json({ code });
   } catch (error) {
-    return res.status(500).json({ message: "Failed to generate code.", error: error.message });
+    return res.status(500).json({ message: "Failed to generate unique code.", error: error.message });
   }
 }
 
 async function getDepartments(req, res) {
   try {
     const departments = await Department.find().sort({ createdAt: -1 }).lean();
-    
+
     // Add student count to each department
     const departmentsWithCounts = await Promise.all(
       departments.map(async (dept) => {
@@ -74,8 +81,52 @@ async function getDepartments(req, res) {
 
 async function getTeachers(req, res) {
   try {
-    const teachers = await Teacher.find().select("-password").sort({ createdAt: -1 });
-    return res.status(200).json({ teachers });
+    const { departmentId } = req.query;
+    const filter = {};
+    if (departmentId) {
+      filter.departmentId = departmentId;
+    }
+    const teachers = await Teacher.find(filter).select("-password").sort({ createdAt: -1 }).lean();
+
+    const teachersWithCounts = await Promise.all(
+      teachers.map(async (teacher) => {
+        const [activitiesCount, papersCount, booksCount, grantsCount, consultanciesCount, achievementsCount, committeesCount, editorialCount, journalsCount, conferencesCount, chaptersCount] = await Promise.all([
+          ActivityDetails.countDocuments({ createdBy: teacher._id }),
+          ResearchPaper.countDocuments({ teacherId: teacher._id }),
+          BookPublication.countDocuments({ teacherId: teacher._id }),
+          Grant.countDocuments({ teacherId: teacher._id }),
+          Consultancy.countDocuments({ teacherId: teacher._id }),
+          Achievement.countDocuments({ achievedBy: teacher._id }),
+          Commitee.countDocuments({ teacherId: teacher._id }),
+          EditorialBoard.countDocuments({ teacherId: teacher._id }),
+          JournalPublication.countDocuments({ teacherId: teacher._id }),
+          ConferencePublication.countDocuments({ teacherId: teacher._id }),
+          BookChapter.countDocuments({ teacherId: teacher._id })
+        ]);
+
+        const totalContributions = activitiesCount + papersCount + booksCount + grantsCount + consultanciesCount + achievementsCount + committeesCount + editorialCount + journalsCount + conferencesCount + chaptersCount;
+
+        return {
+          ...teacher,
+          counts: {
+            activities: activitiesCount,
+            papers: papersCount,
+            books: booksCount,
+            grants: grantsCount,
+            consultancies: consultanciesCount,
+            achievements: achievementsCount,
+            committees: committeesCount,
+            editorial: editorialCount,
+            journals: journalsCount,
+            conferences: conferencesCount,
+            chapters: chaptersCount
+          },
+          totalContributions
+        };
+      })
+    );
+
+    return res.status(200).json({ teachers: teachersWithCounts });
   } catch (error) {
     return res.status(500).json({ message: "Failed to fetch teachers.", error: error.message });
   }
@@ -108,11 +159,12 @@ async function createTeacher(req, res) {
       lastName,
       designations,
       createdBy,
+      employeeId,
     } = req.body;
 
     const resolvedCreatedBy = await resolveAdminId(createdBy);
-    if (!departmentId || !email || !username || !password || !confirmPassword || !resolvedCreatedBy) {
-      return res.status(400).json({ message: "Missing required teacher fields or invalid createdBy." });
+    if (!departmentId || !email || !username || !password || !confirmPassword || !resolvedCreatedBy || !employeeId) {
+      return res.status(400).json({ message: "Missing required teacher fields (including employee ID) or invalid createdBy." });
     }
 
     if (password !== confirmPassword) {
@@ -124,12 +176,26 @@ async function createTeacher(req, res) {
       return res.status(404).json({ message: "Department not found." });
     }
 
-    const existingTeacher = await Teacher.findOne({
-      $or: [{ email: email.trim().toLowerCase() }, { username: username.trim() }],
-    });
+    // Individual uniqueness checks
+    const existingEmail = await Teacher.findOne({ email: email.trim().toLowerCase() });
+    if (existingEmail) {
+      return res.status(409).json({ message: "Teacher already exists with this email ID." });
+    }
 
-    if (existingTeacher) {
-      return res.status(409).json({ message: "Teacher already exists with this email or username." });
+    const existingUsername = await Teacher.findOne({ 
+      username: username.trim(), 
+      departmentId: department._id 
+    });
+    if (existingUsername) {
+      return res.status(409).json({ message: "Teacher already exists with this username in this department." });
+    }
+
+    const existingEmployeeId = await Teacher.findOne({ 
+      employeeId: employeeId.trim(), 
+      departmentId: department._id 
+    });
+    if (existingEmployeeId) {
+      return res.status(409).json({ message: "Teacher already exists with this employee ID in this department." });
     }
 
     const teacher = await Teacher.create({
@@ -138,12 +204,13 @@ async function createTeacher(req, res) {
       designations: Array.isArray(designations) ? designations : (designations ? [designations] : []),
       email: email.trim().toLowerCase(),
       username: username.trim(),
+      employeeId: employeeId.trim(),
       password,
       contactNumber: (contactNumber || "0000000000").trim(),
       collegeName: (collegeName || department.collegeName || "Unknown").trim(),
       departmentId: department._id,
       departmentName: department.departmentName,
-      departmentCode: department.departmentCode,
+      departmentUid: department.departmentUid,
       createdBy: resolvedCreatedBy,
       role: "teacher",
     });
@@ -220,8 +287,30 @@ async function deleteTeacher(req, res) {
 async function getDepartmentStudents(req, res) {
   try {
     const { departmentId } = req.params;
-    const students = await Student.find({ departmentId }).select("-password").sort({ createdAt: -1 });
-    return res.status(200).json({ students });
+    const students = await Student.find({ 
+      departmentId,
+      enrolledClassroomId: { $exists: true, $ne: null }
+    }).select("-password").sort({ createdAt: -1 }).lean();
+
+    const studentsWithCounts = await Promise.all(
+      students.map(async (student) => {
+        const [achievementsCount, activitiesCount] = await Promise.all([
+          Achievement.countDocuments({ achievedBy: student._id }),
+          ActivityDetails.countDocuments({ createdBy: student._id })
+        ]);
+
+        return {
+          ...student,
+          counts: {
+            achievements: achievementsCount,
+            activities: activitiesCount
+          },
+          totalContributions: achievementsCount + activitiesCount
+        };
+      })
+    );
+
+    return res.status(200).json({ students: studentsWithCounts });
   } catch (error) {
     return res.status(500).json({ message: "Failed to fetch department students.", error: error.message });
   }

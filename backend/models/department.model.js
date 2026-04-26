@@ -26,14 +26,7 @@ const departmentSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
-  departmentCode: {
-    type: String,
-    required: true,
-    unique: true,
-    uppercase: true,
-    trim: true,
-  },
- 
+
   collegeName: {
     type: String,
     required: true,
@@ -53,7 +46,7 @@ const departmentSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  
+
   description: String,
 
   hod: {
@@ -105,16 +98,6 @@ departmentSchema.pre("save", function () {
   this.updatedAt = Date.now();
 });
 
-departmentSchema.statics.generateUniqueCode = async function () {
-  let attempts = 0;
-  while (attempts < 10) {
-    const candidate = generateDepartmentUid();
-    const exists = await this.exists({ departmentCode: candidate });
-    if (!exists) return candidate;
-    attempts += 1;
-  }
-  throw new Error("Could not generate a unique department code.");
-};
 
 module.exports = mongoose.model("Department", departmentSchema);
 

@@ -16,14 +16,15 @@ export default function ActivitiesTable({ activities, onEdit, onDelete }) {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-auto max-h-[600px] scrollbar-thin">
         <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-200">
+          <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 sticky top-0 z-20">
             <tr>
               <th className="px-6 py-4 font-semibold">Activity Name</th>
               <th className="px-6 py-4 font-semibold">Academic Year</th>
               <th className="px-6 py-4 font-semibold">Sem</th>
               <th className="px-6 py-4 font-semibold">Type</th>
+              <th className="px-6 py-4 font-semibold">Participation</th>
               <th className="px-6 py-4 font-semibold">Mode</th>
               <th className="px-6 py-4 font-semibold text-center">Action</th>
             </tr>
@@ -31,7 +32,7 @@ export default function ActivitiesTable({ activities, onEdit, onDelete }) {
           <tbody className="divide-y divide-slate-100 text-slate-700">
             {activities.length === 0 ? (
               <tr>
-                <td colSpan="6" className="px-6 py-12 text-center text-slate-400 font-medium">
+                <td colSpan="7" className="px-6 py-12 text-center text-slate-400 font-medium">
                   No activities found. Click "Add Activity" to create one.
                 </td>
               </tr>
@@ -45,22 +46,25 @@ export default function ActivitiesTable({ activities, onEdit, onDelete }) {
                   <td className="px-6 py-4">{act.semester}</td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
-                      {act.activityType}
+                      {act.activityType === "Other" && act.otherActivityType ? act.otherActivityType : act.activityType}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
-                      act.activityMode === 'Organised' 
+                      act.participationType === 'Organised' 
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                       : 'bg-amber-50 text-amber-700 border-amber-200'
                     }`}>
-                      {act.activityMode}
+                      {act.participationType}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 text-slate-600 font-medium">
+                    {act.activityMode}
                   </td>
                   <td className="px-6 py-4 text-center space-x-2 flex justify-center items-center">
                     <button
                       onClick={() => setSelectedActivity(act)}
-                      className="inline-flex items-center justify-center p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition-colors tooltip"
+                      className="inline-flex items-center justify-center p-2 rounded-lg  text-indigo-600 hover:bg-indigo-200 transition-colors tooltip"
                       title="View Details"
                     >
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -71,7 +75,7 @@ export default function ActivitiesTable({ activities, onEdit, onDelete }) {
                     {onEdit && (
                        <button
                          onClick={() => onEdit(act)}
-                         className="inline-flex items-center justify-center p-2 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-slate-100 transition-colors tooltip"
+                         className="inline-flex items-center justify-center p-2 rounded-lg text-amber-600 hover:bg-amber-200 transition-colors tooltip"
                          title="Edit Activity"
                        >
                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -82,7 +86,7 @@ export default function ActivitiesTable({ activities, onEdit, onDelete }) {
                     {onDelete && (
                        <button
                          onClick={() => onDelete(act)}
-                         className="inline-flex items-center justify-center p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-slate-100 transition-colors tooltip"
+                         className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 hover:bg-red-200 transition-colors tooltip"
                          title="Delete Activity"
                        >
                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

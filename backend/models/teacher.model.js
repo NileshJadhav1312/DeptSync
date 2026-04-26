@@ -17,7 +17,6 @@ const DESIGNATION_OPTIONS = [
 
 const teacherSchema = new mongoose.Schema({
   // Basic Info
-  employeeId: { type: String, trim: true, unique: true, sparse: true },
   firstName: { type: String, required: true, trim: true },
   lastName: { type: String, trim: true },
 
@@ -89,6 +88,13 @@ const teacherSchema = new mongoose.Schema({
     trim: true,
     sparse: true,
   },
+  employeeId: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    sparse: true,
+  },
 
   password: {
     type: String,
@@ -115,7 +121,7 @@ const teacherSchema = new mongoose.Schema({
   },
 
   departmentName: String,
-  departmentCode: String,
+  departmentUid: String,
 
   collegeName: {
     type: String,
@@ -159,7 +165,7 @@ teacherSchema.pre("validate", async function () {
     (this.isNew ||
       this.isModified("departmentId") ||
       !this.departmentName ||
-      !this.departmentCode ||
+      !this.departmentUid ||
       !this.collegeName)
   ) {
     const department = await Department.findById(this.departmentId).lean();
@@ -167,7 +173,7 @@ teacherSchema.pre("validate", async function () {
       throw new Error("Invalid departmentId provided for teacher.");
     }
     this.departmentName = department.departmentName;
-    this.departmentCode = department.departmentCode;
+    this.departmentUid = department.departmentUid;
     if (department.collegeName) {
       this.collegeName = department.collegeName;
     }

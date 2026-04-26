@@ -28,6 +28,8 @@ async function createResearchPaper(req, res) {
       keywords,
       affiliation,
       status,
+      supportingDocuments,
+      supportingDocumentDetails,
     } = req.body;
 
     if (!year || !title || !publicationLevel || !publicationType || !teacherId || !departmentId) {
@@ -59,6 +61,8 @@ async function createResearchPaper(req, res) {
       keywords,
       affiliation,
       status,
+      supportingDocuments,
+      supportingDocumentDetails,
     });
 
     return res.status(201).json({ message: "Research paper added successfully.", researchPaper });

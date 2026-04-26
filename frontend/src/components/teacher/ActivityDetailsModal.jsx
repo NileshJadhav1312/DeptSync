@@ -32,7 +32,13 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity }) {
             </div>
             <div>
               <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Type</span>
-              <span className="font-semibold text-slate-900">{activity.activityType}</span>
+              <span className="font-semibold text-slate-900">
+                {activity.activityType === "Other" && activity.otherActivityType ? activity.otherActivityType : activity.activityType}
+              </span>
+            </div>
+            <div>
+              <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Participation</span>
+              <span className="font-semibold text-slate-900">{activity.participationType}</span>
             </div>
             <div>
               <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Mode</span>
@@ -67,6 +73,14 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity }) {
             <div>
               <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Certifying Institute</span>
               <span className="font-semibold text-slate-900">{activity.certifyingInstitute || "N/A"}</span>
+            </div>
+            <div>
+              <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Key Focused Areas</span>
+              <span className="font-semibold text-slate-900">{activity.keyFocusedAreas || "N/A"}</span>
+            </div>
+            <div>
+              <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Target Audience</span>
+              <span className="font-semibold text-slate-900">{activity.targetAudience || "N/A"}</span>
             </div>
           </div>
 

@@ -7,13 +7,21 @@ exports.createActivity = async (req, res) => {
     return res.status(201).json({ success: true, activity });
   } catch (error) {
     console.error("Error creating activity:", error);
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ success: false, message: "Validation Error", details: error.errors });
+    }
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
 exports.getActivities = async (req, res) => {
   try {
-    const activities = await ActivityDetails.find().sort({ createdAt: -1 });
+    const { departmentId } = req.query;
+    const filter = {};
+    if (departmentId && departmentId !== "null" && departmentId !== "undefined") {
+      filter.departmentId = departmentId;
+    }
+    const activities = await ActivityDetails.find(filter).sort({ createdAt: -1 });
     return res.status(200).json({ success: true, activities });
   } catch (error) {
     console.error("Error fetching activities:", error);

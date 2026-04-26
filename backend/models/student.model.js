@@ -76,9 +76,29 @@ const studentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Teacher",
   },
+  enrolledClassroomId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Classroom",
+  },
+  pendingClassroomId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Classroom",
+  },
+  pastClassrooms: [
+    {
+      classroomId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Classroom",
+      },
+      className: String,
+      removedAt: {
+        type: Date,
+        default: Date.now,
+      }
+    }
+  ],
   departmentUid: String,
   departmentName: String,
-  departmentCode: String,
   collegeName: {
     type: String,
     trim: true,
@@ -102,7 +122,6 @@ studentSchema.pre("validate", async function () {
     (this.isNew ||
       this.isModified("departmentId") ||
       !this.departmentName ||
-      !this.departmentCode ||
       !this.collegeName ||
       !this.departmentUid)
   ) {
@@ -111,7 +130,6 @@ studentSchema.pre("validate", async function () {
       throw new Error("Invalid departmentId provided for student.");
     }
     this.departmentName = department.departmentName;
-    this.departmentCode = department.departmentCode;
     this.departmentUid = department.departmentUid;
     if (department.collegeName) {
       this.collegeName = department.collegeName;

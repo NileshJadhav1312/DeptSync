@@ -3,67 +3,10 @@ const BookPublication = require("../models/bookPublication.model");
 // Create BookPublication
 async function createBookPublication(req, res) {
   try {
-    const {
-      title,
-      subtitle,
-      description,
-      authors,
-      publicationDate,
-      publisher,
-      edition,
-      language,
-      isbn,
-      issn,
-      subjects,
-      bookArea,
-      level,
-      coverImage,
-      pdfFile,
-      price,
-      tags,
-      keywords,
-      rating,
-      googleBooksLink,
-      researchGateLink,
-      teacherId,
-      teacherName,
-      departmentId,
-      departmentName,
-    } = req.body;
-
-    if (!title || !publicationDate || !publisher || !teacherId || !departmentId) {
-      return res.status(400).json({ message: "Missing required fields." });
-    }
-
     const bookPublication = await BookPublication.create({
-      title,
-      subtitle,
-      description,
-      authors,
-      publicationDate,
-      publisher,
-      edition,
-      language,
-      isbn,
-      issn,
-      subjects,
-      bookArea,
-      level,
-      coverImage,
-      pdfFile,
-      price,
-      tags,
-      keywords,
-      rating,
-      googleBooksLink,
-      researchGateLink,
-      teacherId,
-      teacherName,
-      departmentId,
-      departmentName,
-      writtenBy: teacherId,
+      ...req.body,
+      isActive: true
     });
-
     return res.status(201).json({ message: "Book publication added successfully.", bookPublication });
   } catch (error) {
     console.error("createBookPublication error", error);
@@ -74,15 +17,13 @@ async function createBookPublication(req, res) {
 // Get all BookPublications (with filtering)
 async function getAllBookPublications(req, res) {
   try {
-    const { teacherId, departmentId, level, bookArea } = req.query;
+    const { teacherId, departmentId } = req.query;
     let query = { isActive: true };
 
     if (teacherId) query.teacherId = teacherId;
     if (departmentId) query.departmentId = departmentId;
-    if (level) query.level = level;
-    if (bookArea) query.bookArea = bookArea;
 
-    const bookPublications = await BookPublication.find(query).sort({ publicationDate: -1 });
+    const bookPublications = await BookPublication.find(query).sort({ publicationYear: -1 });
     return res.status(200).json({ bookPublications });
   } catch (error) {
     console.error("getAllBookPublications error", error);
@@ -108,9 +49,7 @@ async function getBookPublicationById(req, res) {
 async function updateBookPublication(req, res) {
   try {
     const { id } = req.params;
-    const updateData = req.body;
-
-    const bookPublication = await BookPublication.findByIdAndUpdate(id, updateData, { new: true });
+    const bookPublication = await BookPublication.findByIdAndUpdate(id, req.body, { new: true });
     if (!bookPublication) {
       return res.status(404).json({ message: "Book publication not found." });
     }

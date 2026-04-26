@@ -34,3 +34,16 @@
 @utility shadow-soft {
   box-shadow: 0 10px 20px -10px rgba(15, 23, 42, 0.25);
 }
+
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-slate-200 hover:bg-slate-300;
+  }
+}

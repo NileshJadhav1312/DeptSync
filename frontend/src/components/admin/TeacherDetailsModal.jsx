@@ -76,13 +76,13 @@ export default function TeacherDetailsModal({ isOpen, onClose, teacher }) {
                     <div>
                        <p className="text-xs text-slate-700 font-medium mb-0.5">Department Code</p>
                        <p className="  text-red-700  py-1 rounded-lg text-sm font-bold  ">
-                          {teacher.departmentCode}
+                          {teacher.departmentUid}
                        </p>
                     </div>
                     <div>
                        <p className="text-xs text-slate-700 font-medium mb-0.5">Date of Joining</p>
                        <p className="  text-indigo-700  py-1 rounded-lg text-sm font-bold  ">
-                          {teacher.dateOfJoining || "Not Provided"}
+                          {teacher.joinDate || "Not Provided"}
                        </p>
                     </div>
                     <div>
@@ -115,11 +115,36 @@ export default function TeacherDetailsModal({ isOpen, onClose, teacher }) {
                  )}
               </div>
            </div>
+
+           <div className="mt-8 pt-8 border-t border-slate-400">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-[0.2em] mb-4">Contributions Overview</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                 {[
+                   { label: "Activities", count: teacher.counts?.activities, color: "bg-blue-50 text-blue-700 border-blue-100" },
+                   { label: "Research Papers", count: teacher.counts?.papers, color: "bg-indigo-50 text-indigo-700 border-indigo-100" },
+                   { label: "Books", count: teacher.counts?.books, color: "bg-purple-50 text-purple-700 border-purple-100" },
+                   { label: "Grants", count: teacher.counts?.grants, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+                   { label: "Achievements", count: teacher.counts?.achievements, color: "bg-amber-50 text-amber-700 border-amber-100" },
+                   { label: "Consultancies", count: teacher.counts?.consultancies, color: "bg-teal-50 text-teal-700 border-teal-100" },
+                   { label: "Committees", count: teacher.counts?.committees, color: "bg-orange-50 text-orange-700 border-orange-100" },
+                   { label: "Editorial", count: teacher.counts?.editorial, color: "bg-rose-50 text-rose-700 border-rose-100" },
+                 ].map((item, idx) => (
+                   <div key={idx} className={`p-4 rounded-2xl border ${item.color} shadow-sm flex flex-col items-center justify-center text-center`} style={{ animationDelay: `${idx * 50}ms` }}>
+                      <p className="text-2xl font-black">{item.count || 0}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider mt-1">{item.label}</p>
+                   </div>
+                 ))}
+              </div>
+              <div className="mt-4 p-4 bg-slate-900 text-white rounded-2xl flex justify-between items-center shadow-lg">
+                 <span className="text-xs font-bold uppercase tracking-widest">Total Contributions</span>
+                 <span className="text-2xl font-black">{teacher.totalContributions || 0}</span>
+              </div>
+           </div>
         </div>
 
         {/* Footer */}
         <div className="bg-slate-50 border-t border-slate-400 p-6 flex justify-end shrink-0">
-          <button onClick={onClose} className="btn-primary px-10">
+          <button onClick={onClose} className="btn-primary px-10 text-black">
             Close 
           </button>
         </div>

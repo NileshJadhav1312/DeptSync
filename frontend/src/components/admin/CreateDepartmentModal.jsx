@@ -3,7 +3,6 @@ import React, { useState } from "react";
 export default function CreateDepartmentModal({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     departmentName: "",
-    departmentCode: "",
     departmentUid: "",
     collegeName: "",
   });
@@ -18,7 +17,7 @@ export default function CreateDepartmentModal({ isOpen, onClose, onSubmit }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(formData);
-    setFormData({ departmentName: "", departmentCode: "", departmentUid: "", collegeName: "" });
+    setFormData({ departmentName: "", departmentUid: "", collegeName: "" });
     onClose();
   };
 
@@ -45,28 +44,6 @@ export default function CreateDepartmentModal({ isOpen, onClose, onSubmit }) {
               onChange={handleChange} 
               className="input w-full" 
               placeholder="e.g. Computer Science and Engineering" 
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Department Code</label>
-            <input 
-              required 
-              name="departmentCode" 
-              value={formData.departmentCode} 
-              onChange={handleChange} 
-              className="input w-full" 
-              placeholder="e.g. CSE" 
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Department UID</label>
-            <input 
-              required 
-              name="departmentUid" 
-              value={formData.departmentUid} 
-              onChange={handleChange} 
-              className="input w-full" 
-              placeholder="Unique identifier" 
             />
           </div>
           <div>

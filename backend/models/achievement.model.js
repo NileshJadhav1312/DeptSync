@@ -48,6 +48,7 @@ const achievementSchema = new mongoose.Schema(
         "University",
         "Institute",
         "Department",
+        "Departmental",
       ],
       required: true,
     },

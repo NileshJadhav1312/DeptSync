@@ -28,7 +28,7 @@ const researchPaperSchema = new mongoose.Schema({
 
   publicationType: {
     type: String,
-    enum: ["journal", "conference", "workshop", "book chapter", "other"],
+    enum: ["research paper", "journal","conference", "workshop", "book chapter", "other"],
     required: true
   },
 
@@ -109,6 +109,12 @@ const researchPaperSchema = new mongoose.Schema({
   keywords: [String],
 
   affiliation: String,
+
+  supportingDocuments: {
+    type: Boolean,
+    default: false
+  },
+  supportingDocumentDetails: String,
 
   status: {
     type: String,

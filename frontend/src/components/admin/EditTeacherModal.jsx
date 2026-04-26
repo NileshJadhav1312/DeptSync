@@ -112,9 +112,8 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher, l
                 type="text"
                 name="firstName"
                 value={formData.firstName}
-                onChange={handleChange}
-                className="input"
-                required
+                className="input bg-slate-100 cursor-not-allowed text-slate-500 font-medium"
+                readOnly
               />
             </div>
             <div>
@@ -123,8 +122,8 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher, l
                 type="text"
                 name="lastName"
                 value={formData.lastName}
-                onChange={handleChange}
-                className="input"
+                className="input bg-slate-100 cursor-not-allowed text-slate-500 font-medium"
+                readOnly
               />
             </div>
           </div>
@@ -136,9 +135,8 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher, l
                 type="email"
                 name="email"
                 value={formData.email}
-                onChange={handleChange}
-                className="input"
-                required
+                className="input bg-slate-100 cursor-not-allowed text-slate-500 font-medium"
+                readOnly
               />
             </div>
             <div>
@@ -147,9 +145,8 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher, l
                 type="text"
                 name="username"
                 value={formData.username}
-                onChange={handleChange}
-                className="input"
-                required
+                className="input bg-slate-100 cursor-not-allowed text-slate-500 font-medium"
+                readOnly
               />
             </div>
           </div>
@@ -160,8 +157,8 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher, l
               type="text"
               name="contactNumber"
               value={formData.contactNumber}
-              onChange={handleChange}
-              className="input"
+              className="input bg-slate-100 cursor-not-allowed text-slate-500 font-medium"
+              readOnly
             />
           </div>
 

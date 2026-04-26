@@ -1,10 +1,15 @@
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 
 const classroomSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
     trim: true,
+  },
+  classroomCode: {
+    type: String,
+    unique: true,
   },
   departmentId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -42,8 +47,11 @@ const classroomSchema = new mongoose.Schema({
   },
 });
 
-classroomSchema.pre("save", function () {
+classroomSchema.pre("save", async function () {
   this.updatedAt = Date.now();
+  if (!this.classroomCode) {
+    this.classroomCode = crypto.randomBytes(3).toString("hex").toUpperCase(); // e.g., 6-character hex code
+  }
 });
 
 module.exports = mongoose.model("Classroom", classroomSchema);

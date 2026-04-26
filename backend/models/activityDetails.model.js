@@ -22,6 +22,14 @@ const activitySchema = new mongoose.Schema(
       required: true,
     },
 
+    keyFocusedAreas: {
+      type: String,
+    },
+
+    targetAudience: {
+      type: String,
+    },
+
     fromDate: {
       type: Date,
       required: true,
@@ -68,18 +76,32 @@ const activitySchema = new mongoose.Schema(
         "Guest Lecture",
         "Workshop",
         "Seminar",
+        "Session",
         "Webinar",
         "Training Session",
         "FDP",
         "STTP",
+        "Conference",
+        "Project Exhibition",
+        "Competition",
         "Other",
       ],
       required: true,
     },
 
-    activityMode: {
+    otherActivityType: {
+      type: String,
+    },
+
+    participationType: {
       type: String,
       enum: ["Organised", "Attended"],
+      required: true,
+    },
+
+    activityMode: {
+      type: String,
+      enum: ["Online", "Offline", "Hybrid"],
       required: true,
     },
 
@@ -104,6 +126,7 @@ const activitySchema = new mongoose.Schema(
         "University",
         "Institute",
         "Department",
+        "Departmental"
       ],
       required: true,
     },
@@ -111,6 +134,10 @@ const activitySchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+    },
+    departmentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Department",
     },
 
     createdAt: {

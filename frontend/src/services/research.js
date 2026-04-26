@@ -131,3 +131,118 @@ export const deleteConsultancy = async (id) => {
   const response = await api.delete(`/consultancies/${id}`);
   return response.data;
 };
+
+// 7. Journal Publications
+export const getJournalPublications = async (params) => {
+  const response = await api.get("/journal-publications", { params });
+  return response.data;
+};
+export const getJournalPublicationById = async (id) => {
+  const response = await api.get(`/journal-publications/${id}`);
+  return response.data;
+};
+export const createJournalPublication = async (data) => {
+  const response = await api.post("/journal-publications", data);
+  return response.data;
+};
+export const updateJournalPublication = async (id, data) => {
+  const response = await api.put(`/journal-publications/${id}`, data);
+  return response.data;
+};
+export const deleteJournalPublication = async (id) => {
+  const response = await api.delete(`/journal-publications/${id}`);
+  return response.data;
+};
+
+// 8. Conference Publications
+export const getConferencePublications = async (params) => {
+  const response = await api.get("/conference-publications", { params });
+  return response.data;
+};
+export const getConferencePublicationById = async (id) => {
+  const response = await api.get(`/conference-publications/${id}`);
+  return response.data;
+};
+export const createConferencePublication = async (data) => {
+  const response = await api.post("/conference-publications", data);
+  return response.data;
+};
+export const updateConferencePublication = async (id, data) => {
+  const response = await api.put(`/conference-publications/${id}`, data);
+  return response.data;
+};
+export const deleteConferencePublication = async (id) => {
+  const response = await api.delete(`/conference-publications/${id}`);
+  return response.data;
+};
+export const reviewConferencePublication = async (id, data) => {
+  const response = await api.put(`/conference-publications/review/${id}`, data);
+  return response.data;
+};
+
+
+// 9. Book Chapters
+export const getBookChapters = async (params) => {
+  const response = await api.get("/book-chapters", { params });
+  return response.data;
+};
+export const getBookChapterById = async (id) => {
+  const response = await api.get(`/book-chapters/${id}`);
+  return response.data;
+};
+export const createBookChapter = async (data) => {
+  const response = await api.post("/book-chapters", data);
+  return response.data;
+};
+export const updateBookChapter = async (id, data) => {
+  const response = await api.put(`/book-chapters/${id}`, data);
+  return response.data;
+};
+export const deleteBookChapter = async (id) => {
+  const response = await api.delete(`/book-chapters/${id}`);
+  return response.data;
+};
+
+// 10. Patents
+export const getPatents = async (params) => {
+  const response = await api.get("/patents", { params });
+  return response.data;
+};
+export const getPatentById = async (id) => {
+  const response = await api.get(`/patents/${id}`);
+  return response.data;
+};
+export const createPatent = async (data) => {
+  const response = await api.post("/patents", data);
+  return response.data;
+};
+export const updatePatent = async (id, data) => {
+  const response = await api.put(`/patents/${id}`, data);
+  return response.data;
+};
+export const deletePatent = async (id) => {
+  const response = await api.delete(`/patents/${id}`);
+  return response.data;
+};
+
+// 11. Copyrights
+export const getCopyrights = async (params) => {
+  const response = await api.get("/copyrights", { params });
+  return response.data;
+};
+export const getCopyrightById = async (id) => {
+  const response = await api.get(`/copyrights/${id}`);
+  return response.data;
+};
+export const createCopyright = async (data) => {
+  const response = await api.post("/copyrights", data);
+  return response.data;
+};
+export const updateCopyright = async (id, data) => {
+  const response = await api.put(`/copyrights/${id}`, data);
+  return response.data;
+};
+export const deleteCopyright = async (id) => {
+  const response = await api.delete(`/copyrights/${id}`);
+  return response.data;
+};

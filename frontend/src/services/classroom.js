@@ -29,3 +29,13 @@ export async function acceptStudent(payload) {
   const response = await API.post("/classrooms/accept-student", payload);
   return response.data;
 }
+
+export async function rejectStudent(payload) {
+  const response = await API.post("/classrooms/reject-student", payload);
+  return response.data;
+}
+
+export async function removeStudent(payload) {
+  const response = await API.post("/classrooms/remove-student", payload);
+  return response.data;
+}

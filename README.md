@@ -37,3 +37,6 @@ npm run dev
 - `MONGO_URI` – MongoDB connection string
 - `JWT_SECRET` – secret for signing tokens
 - `PORT` – optional API port (defaults to 5000)
+
+
+

@@ -38,8 +38,8 @@ exports.getTeacherClassrooms = async (req, res) => {
 
 exports.joinDepartment = async (req, res) => {
   try {
-    const { studentId, departmentCode } = req.body;
-    const department = await Department.findOne({ departmentCode: departmentCode.trim().toUpperCase() });
+    const { studentId, departmentUid } = req.body;
+    const department = await Department.findOne({ departmentUid: departmentUid.trim().toUpperCase() });
     if (!department) {
       return res.status(404).json({ message: "Invalid Department Code." });
     }
@@ -48,7 +48,6 @@ exports.joinDepartment = async (req, res) => {
 
     student.departmentId = department._id;
     student.departmentName = department.departmentName;
-    student.departmentCode = department.departmentCode;
     student.departmentUid = department.departmentUid;
     student.collegeName = department.collegeName;
     
@@ -61,17 +60,41 @@ exports.joinDepartment = async (req, res) => {
 
 exports.requestJoinClass = async (req, res) => {
   try {
-    const { studentId, classId } = req.body;
-    const classroom = await Classroom.findById(classId);
+    const { studentId, classroomCode } = req.body;
+    if (!studentId || !classroomCode) {
+      return res.status(400).json({ message: "Student ID and Classroom Code are required." });
+    }
+
+    const classroom = await Classroom.findOne({ classroomCode: classroomCode.trim().toUpperCase() });
     if (!classroom) return res.status(404).json({ message: "Classroom not found." });
 
     if (classroom.pendingStudents.includes(studentId) || classroom.enrolledStudents.includes(studentId)) {
       return res.status(400).json({ message: "You have already requested to join or are enrolled in this class." });
     }
 
+    // Add to classroom's pending list
     classroom.pendingStudents.push(studentId);
     await classroom.save();
-    return res.status(200).json({ success: true, message: "Request to join class sent successfully." });
+
+    // Update student's pending status
+    const student = await Student.findById(studentId);
+    if (student) {
+      student.pendingClassroomId = classroom._id;
+      // Also sync department if they were somehow in the wrong one, 
+      // though typically they join a department first.
+      if (!student.departmentId || student.departmentId.toString() !== classroom.departmentId.toString()) {
+        const dept = await Department.findById(classroom.departmentId);
+        if (dept) {
+          student.departmentId = dept._id;
+          student.departmentName = dept.departmentName;
+          student.departmentUid = dept.departmentUid;
+          student.collegeName = dept.collegeName;
+        }
+      }
+      await student.save();
+    }
+
+    return res.status(200).json({ success: true, message: "Request to join class sent successfully.", classroom });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -80,24 +103,69 @@ exports.requestJoinClass = async (req, res) => {
 exports.acceptStudent = async (req, res) => {
   try {
     const { studentId, classId } = req.body;
-    const classroom = await Classroom.findById(classId);
+    const classroom = await Classroom.findByIdAndUpdate(classId, {
+      $pull: { pendingStudents: studentId },
+      $addToSet: { enrolledStudents: studentId }
+    }, { new: true });
+    
     if (!classroom) return res.status(404).json({ message: "Classroom not found." });
 
-    classroom.pendingStudents = classroom.pendingStudents.filter(id => id.toString() !== studentId);
-    if (!classroom.enrolledStudents.includes(studentId)) {
-      classroom.enrolledStudents.push(studentId);
-    }
-    await classroom.save();
-
-    const student = await Student.findById(studentId);
-    if (student) {
-      student.className = classroom.name;
-      student.classTeacherId = classroom.classTeacherId;
-      await student.save();
-    }
+    await Student.findByIdAndUpdate(studentId, {
+      $set: { 
+        className: classroom.name,
+        classTeacherId: classroom.classTeacherId,
+        enrolledClassroomId: classroom._id
+      },
+      $unset: { pendingClassroomId: 1 }
+    });
 
     return res.status(200).json({ success: true, message: "Student enrolled successfully." });
   } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+exports.rejectStudent = async (req, res) => {
+  try {
+    const { studentId, classId } = req.body;
+    await Classroom.findByIdAndUpdate(classId, {
+      $pull: { pendingStudents: studentId }
+    });
+
+    await Student.findByIdAndUpdate(studentId, {
+      $unset: { pendingClassroomId: 1 }
+    });
+
+    return res.status(200).json({ success: true, message: "Request rejected successfully." });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+exports.removeStudent = async (req, res) => {
+  try {
+    const { studentId, classId } = req.body;
+    await Classroom.findByIdAndUpdate(classId, {
+      $pull: { enrolledStudents: studentId }
+    });
+
+    const student = await Student.findById(studentId);
+    if(student) {
+        if(student.enrolledClassroomId) {
+            student.pastClassrooms.push({
+                classroomId: student.enrolledClassroomId,
+                className: student.className
+            });
+        }
+        student.enrolledClassroomId = undefined;
+        student.classTeacherId = undefined;
+        student.className = "";
+        await student.save();
+    }
+
+    return res.status(200).json({ success: true, message: "Student removed from classroom." });
+  } catch (error) {
+    console.error("removeStudent fail:", error);
     return res.status(500).json({ message: error.message });
   }
 };

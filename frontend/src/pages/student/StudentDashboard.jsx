@@ -11,6 +11,9 @@ import ActivitiesTable from "../../components/teacher/ActivitiesTable";
 import ActivityFormModal from "../../components/teacher/ActivityFormModal";
 import AchievementsTable from "../../components/student/StudentAchievementsTable";
 import AchievementFormModal from "../../components/student/StudentAchievementFormModal";
+import { getConferencePublications, createConferencePublication, updateConferencePublication, deleteConferencePublication } from "../../services/research";
+import ConferencePublicationsTable from "../../components/teacher/ConferencePublicationsTable";
+import ConferencePublicationFormModal from "../../components/teacher/ConferencePublicationFormModal";
 
 export default function StudentDashboard() {
   const { user, logout } = useAuth();
@@ -27,25 +30,32 @@ export default function StudentDashboard() {
   const [editingAchievement, setEditingAchievement] = useState(null);
 
   const [classrooms, setClassrooms] = useState([]);
-  const [departmentCodeInput, setDepartmentCodeInput] = useState("");
+  const [departmentUidInput, setDepartmentUidInput] = useState("");
+  const [classroomCodeInput, setClassroomCodeInput] = useState("");
+
+  const [conferencePublications, setConferencePublications] = useState([]);
+  const [isConferenceModalOpen, setIsConferenceModalOpen] = useState(false);
+  const [editingConference, setEditingConference] = useState(null);
 
   const isAchievements = section === "achievements";
   const isActivities = section === "activities";
-  const isClassMenu = section === "class";
+  const isAcademics = section === "academics";
+  const isConferences = section === "conferences";
 
   useEffect(() => {
     if (user?.id) {
       fetchProfile();
       fetchActivities();
       fetchAchievements();
+      fetchConferencePublicationsList();
     }
   }, [user?.id]);
 
   useEffect(() => {
-    if (isClassMenu && profileData?.departmentId) {
+    if (isAcademics && profileData?.departmentId) {
       fetchClassrooms(profileData.departmentId);
     }
-  }, [isClassMenu, profileData?.departmentId]);
+  }, [isAcademics, profileData?.departmentId]);
 
   const fetchProfile = async () => {
     try {
@@ -83,10 +93,19 @@ export default function StudentDashboard() {
     }
   };
 
+  const fetchConferencePublicationsList = async () => {
+    try {
+      const response = await getConferencePublications({ studentId: user.id });
+      setConferencePublications(response.conferencePublications || []);
+    } catch (err) {
+      console.error("Failed to load conferences.", err);
+    }
+  };
+
   const handleJoinDepartment = async (e) => {
     e.preventDefault();
     try {
-      await joinDepartment({ studentId: user.id, departmentCode: departmentCodeInput });
+      await joinDepartment({ studentId: user.id, departmentUid: departmentUidInput });
       alert("Joined department successfully!");
       fetchProfile();
     } catch(err) {
@@ -94,13 +113,15 @@ export default function StudentDashboard() {
     }
   };
 
-  const handleJoinClass = async (classId) => {
+  const handleJoinClassByCode = async (e) => {
+    e.preventDefault();
     try {
-      await requestJoinClass({ studentId: user.id, classId });
-      alert("Request sent successfully!");
-      fetchClassrooms(profileData.departmentId);
+      await requestJoinClass({ studentId: user.id, classroomCode: classroomCodeInput });
+      alert("Join request sent successfully!");
+      fetchProfile();
+      setClassroomCodeInput("");
     } catch(err) {
-      alert(err.response?.data?.message || "Failed to send request.");
+      alert(err.response?.data?.message || "Failed to send join request.");
     }
   };
 
@@ -112,6 +133,7 @@ export default function StudentDashboard() {
         await createActivity({
           ...payload,
           createdBy: user?.id || user?.username || user?.email,
+          departmentId: profileData?.departmentId || null,
         });
       }
       setEditingActivity(null);
@@ -145,7 +167,7 @@ export default function StudentDashboard() {
           achievedByName: profileData?.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user?.name || user?.username || "Student",
           departmentId: profileData?.departmentId || null,
           departmentName: profileData?.departmentName || null,
-          departmentCode: profileData?.departmentCode || null,
+          departmentUid: profileData?.departmentUid || null,
         });
       }
       setEditingAchievement(null);
@@ -176,6 +198,33 @@ export default function StudentDashboard() {
     setIsAchievementModalOpen(true);
   };
 
+  const handleCreateConference = async (payload) => {
+    try {
+      const conferencePayload = {
+        ...payload,
+        studentId: user.id,
+        studentName: profileData ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user.name || "Student",
+        departmentId: profileData?.departmentId,
+        departmentName: profileData?.departmentName,
+        createdByModel: "Student",
+      };
+      
+      if (editingConference) await updateConferencePublication(editingConference._id, conferencePayload);
+      else await createConferencePublication(conferencePayload);
+      setEditingConference(null);
+      fetchConferencePublicationsList();
+    } catch (err) { console.error("Failed to save conference", err); }
+  };
+
+  const handleDeleteConference = async (item) => { 
+    if (window.confirm("Are you sure you want to delete this conference?")) { 
+      try {
+        await deleteConferencePublication(item._id); 
+        fetchConferencePublicationsList(); 
+      } catch (err) { console.error("Failed to delete conference", err); }
+    } 
+  };
+
   const myActivities = useMemo(() => {
     if (!user?.id) return activities;
     return activities.filter(a => a.createdBy === user?.id || a.createdBy?._id === user?.id);
@@ -193,14 +242,15 @@ export default function StudentDashboard() {
     { title: "Class Name", value: classNameStr, helper: `View your class` },
     { title: "PRN Number", value: prnNumberStr, helper: "Your university roll number" },
     { title: "Semester", value: profileData?.semester || "N/A", helper: "Current academic semester" },
-    { title: "Achievements", value: myAchievements.length, helper: "Your tracked achievements", onClick: () => navigate("/student/achievements"), className: "cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all" }
+    { title: "Achievements", value: myAchievements.length, helper: "Your tracked achievements", onClick: () => navigate("/student/achievements"), className: "cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all" },
+    { title: "Conferences", value: conferencePublications.length, helper: "Conference Papers", onClick: () => navigate("/student/conferences"), className: "cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all border-l-4 border-l-blue-500 shadow-sm" }
   ];
 
   return (
     <DashboardLayout
       role="student"
-      title={isAchievements ? "My Achievements" : isClassMenu ? "My Class" : "Student Dashboard"}
-      subtitle={isAchievements ? "Add, modify or delete your achievements." : isClassMenu ? "Manage your class." : "Track your academic details."}
+      title={isAchievements ? "My Achievements" : isAcademics ? "Academics" : isConferences ? "Conference Publications" : "Student Dashboard"}
+      subtitle={isAchievements ? "Add, modify or delete your achievements." : isAcademics ? "Manage your academics and class." : isConferences ? "Track your conference publications." : "Track your academic details."}
       actions={isAchievements ? (
         <button
           className=" text-xs sm:text-sm px-3 sm:px-4 py-2 bg-white  text-black"
@@ -214,6 +264,13 @@ export default function StudentDashboard() {
           onClick={() => { setEditingActivity(null); setIsActivityModalOpen(true) }}
         >
           Add Activity
+        </button>
+      ) : isConferences ? (
+        <button
+          className="bg-white text-xs sm:text-sm px-3 sm:px-4 py-2 text-black"
+          onClick={() => { setEditingConference(null); setIsConferenceModalOpen(true) }}
+        >
+          Add Conference Paper
         </button>
       ) : null}
       onLogout={() => {
@@ -233,22 +290,28 @@ export default function StudentDashboard() {
         onSubmit={handleCreateAchievement}
         initialData={editingAchievement}
       />
+      <ConferencePublicationFormModal
+        isOpen={isConferenceModalOpen}
+        onClose={() => setIsConferenceModalOpen(false)}
+        onSubmit={handleCreateConference}
+        initialData={editingConference}
+      />
 
-      {isClassMenu && (
+      {isAcademics && (
         <div className="space-y-6">
           {!profileData?.departmentId ? (
             <div className="card p-8 bg-indigo-50 border-indigo-200">
               <h3 className="text-xl font-bold text-slate-900 mb-2">Join a Department</h3>
-              <p className="text-sm text-slate-600 mb-4">You have not joined any department yet. Enter the code provided by your department to join.</p>
+              <p className="text-sm text-slate-600 mb-4">You have not joined any department yet. Enter the Unique ID (UID) provided by your department to join.</p>
               <form className="flex flex-col sm:flex-row gap-4 max-w-md" onSubmit={handleJoinDepartment}>
-                <input required className="input flex-1" placeholder="Department Code" value={departmentCodeInput} onChange={e => setDepartmentCodeInput(e.target.value)} />
+                <input required className="input flex-1" placeholder="Department UID" value={departmentUidInput} onChange={e => setDepartmentUidInput(e.target.value)} />
                 <button type="submit" className="btn-primary whitespace-nowrap">Join Department</button>
               </form>
             </div>
           ) : (
             <div>
               <div className="card p-6 mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 border text-slate-900">
-                 <h3 className="font-bold text-lg text-emerald-900 mb-1">Department: {profileData.departmentName} ({profileData.departmentCode})</h3>
+                 <h3 className="font-bold text-lg text-emerald-900 mb-1">Department: {profileData.departmentName} ({profileData.departmentUid})</h3>
                  <p className="text-sm text-emerald-700 font-medium">{profileData.collegeName}</p>
                  {profileData.className && (
                    <div className="mt-4 p-4 bg-white/80 rounded-lg border border-emerald-100 shadow-sm">
@@ -258,33 +321,54 @@ export default function StudentDashboard() {
                  )}
               </div>
               
-              {!profileData.className && (
-                <>
-                  <h3 className="text-lg font-bold text-slate-900 mb-4 px-1">Available Classes to Join</h3>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {classrooms.map(cls => {
-                      const isPending = cls.pendingStudents.some(id => id.toString() === user.id || id === user.id || id._id === user.id);
-                      return (
-                        <Card 
-                          key={cls._id} 
-                          title={cls.name} 
-                          value={isPending ? "Pending Approval" : "Request to Join"} 
-                          helper={`Teacher: ${cls.classTeacherId?.firstName || 'Unknown'}`} 
-                          onClick={() => !isPending && handleJoinClass(cls._id)} 
-                          className={isPending ? "bg-orange-50/50 border-orange-200 cursor-not-allowed opacity-90" : "cursor-pointer hover:border-indigo-500 shadow-sm"} 
-                        />
-                      );
-                    })}
-                    {classrooms.length === 0 && <p className="text-slate-500 italic p-4">No classes found in this department.</p>}
-                  </div>
-                </>
+              {!profileData.className && !profileData.pendingClassroomId && (
+                <div className="card p-6 bg-indigo-50 border border-indigo-100">
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">Join a Classroom</h3>
+                  <p className="text-sm text-slate-600 mb-4">Enter the classroom code provided by your teacher to request joining.</p>
+                  <form className="flex flex-col sm:flex-row gap-4 max-w-md" onSubmit={handleJoinClassByCode}>
+                    <input required className="input flex-1" placeholder="Classroom Code (e.g. A1B2C3)" value={classroomCodeInput} onChange={e => setClassroomCodeInput(e.target.value)} />
+                    <button type="submit" className="btn-primary whitespace-nowrap bg-indigo-600 hover:bg-indigo-700">Send Request</button>
+                  </form>
+                </div>
               )}
+
+              {!profileData.className && profileData.pendingClassroomId && (
+                 <div className="card p-6 bg-orange-50 border border-orange-200">
+                    <h3 className="text-lg font-bold text-orange-900 mb-2">Join Request Pending</h3>
+                    <p className="text-sm text-orange-800">You have successfully requested to join a classroom. Please wait for your class teacher to approve the request.</p>
+                 </div>
+              )}
+
+              <div className="mt-8">
+                  <h3 className="text-xl font-bold text-slate-900 mb-4">Classrooms</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {profileData.className && (
+                          <div className="card p-6 border-2 border-emerald-500 bg-emerald-50 shadow-md">
+                              <div className="flex items-center justify-between mb-4">
+                                  <h4 className="font-bold text-xl text-emerald-900">{profileData.className}</h4>
+                                  <span className="px-3 py-1 bg-emerald-200 text-emerald-800 text-xs font-bold rounded-full">Current</span>
+                              </div>
+                              <p className="text-sm text-emerald-700">You are currently enrolled in this classroom.</p>
+                          </div>
+                      )}
+                      
+                      {profileData.pastClassrooms && profileData.pastClassrooms.map((pc, index) => (
+                          <div key={index} className="card p-6 border-2 border-red-300 bg-red-50 opacity-80">
+                              <div className="flex items-center justify-between mb-4">
+                                  <h4 className="font-bold text-xl text-red-900">{pc.className}</h4>
+                                  <span className="px-3 py-1 bg-red-200 text-red-800 text-xs font-bold rounded-full">Past</span>
+                              </div>
+                              <p className="text-sm text-red-700">Removed on: {new Date(pc.removedAt).toLocaleDateString()}</p>
+                          </div>
+                      ))}
+                  </div>
+              </div>
             </div>
           )}
         </div>
       )}
 
-      {!isAchievements && !isActivities && !isClassMenu && (
+      {!isAchievements && !isActivities && !isAcademics && !isConferences && (
         <>
           <div className="mb-6 rounded-2xl bg-indigo-50 p-6 border border-indigo-500">
             <h2 className="text-lg font-semibold text-slate-900">
@@ -303,7 +387,7 @@ export default function StudentDashboard() {
                </div>
                <button 
                   className="btn-primary whitespace-nowrap bg-orange-600 hover:bg-orange-700 shadow-sm"
-                  onClick={() => navigate("/student/class")}
+                  onClick={() => navigate("/student/academics")}
                >
                  Join Department Now
                </button>
@@ -329,6 +413,14 @@ export default function StudentDashboard() {
       
       {isActivities && (
         <ActivitiesTable activities={myActivities} onEdit={openActivityEditModal} onDelete={handleDeleteActivity} />
+      )}
+      
+      {isConferences && (
+        <ConferencePublicationsTable 
+          conferences={conferencePublications} 
+          onEdit={(c) => { setEditingConference(c); setIsConferenceModalOpen(true); }} 
+          onDelete={handleDeleteConference} 
+        />
       )}
     </DashboardLayout>
   );

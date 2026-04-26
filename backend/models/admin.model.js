@@ -4,18 +4,39 @@ const bcrypt = require("bcryptjs");
 const departmentSchema = new mongoose.Schema(
   {
     departmentName: String,
-    departmentCode: String,
+    departmentUid: String,
   },
   { _id: false },
 );
+
+const DESIGNATION_OPTIONS = [
+  "Associate Professor",
+  "HOD",
+  "SWD Coordinator",
+  "Assistant Professor",
+  "Clerk",
+  "Junior Professor",
+  "NAAC Coordinator",
+  "Research Coordinator",
+  "Class Teacher",
+  "Other",
+];
 
 const adminSchema = new mongoose.Schema({
   firstName: { type: String, required: true, trim: true },
   lastName: { type: String, required: true, trim: true },
   gender: { type: String, enum: ["male", "female", "other"] },
   dateOfBirth: Date,
-  designation: {type: String, trim: true,default: "HOD" },
-  profilePicture: {type: String, },
+  designations: {
+    type: [
+      {
+        type: String,
+        enum: DESIGNATION_OPTIONS,
+      },
+    ],
+    default: [],
+  },
+  profilePicture: { type: String },
   email: {
     type: String,
     required: true,
@@ -28,7 +49,7 @@ const adminSchema = new mongoose.Schema({
   contactNumber: { type: String, required: true, trim: true },
   alternateContactNumber: { type: String, trim: true },
   collegeName: { type: String, required: true, trim: true },
-  employeeId: { type: String, trim: true, unique: true, sparse: true },
+  employeeId: { type: String, required: true, trim: true, unique: true, sparse: true },
   departments: [departmentSchema],
   role: { type: String, default: "admin" },
   isActive: { type: Boolean, default: true },
