@@ -48,8 +48,8 @@ export default function TeacherAchievementFormModal({ isOpen, onClose, onSubmit,
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose} />
       <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl">
         <div className="p-6 border-b border-slate-100 flex items-center justify-between font-bold">
           <h2 className="text-xl font-bold text-slate-900">{initialData ? "Edit Achievement" : "Add Achievement"}</h2>

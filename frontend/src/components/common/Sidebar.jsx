@@ -28,7 +28,7 @@ export default function Sidebar({ role, open, onClose, onLogout }) {
   }, [role, user?.id]);
 
   const designations = profile?.designations || user?.designations || [];
-  const isSWDCoordinator = designations.includes("SWD Coordinator");
+  const isSDWCoordinator = designations.includes("SDW Coordinator");
   const isClassTeacher = designations.includes("Class Teacher") || hasClassrooms;
 
   console.log("Current user in Sidebar:", user);
@@ -39,6 +39,8 @@ export default function Sidebar({ role, open, onClose, onLogout }) {
     { label: "Dashboard", to: "/admin" },
     { label: "Departments", to: "/admin/departments" },
     { label: "Teachers", to: "/admin/teachers" },
+    { label: "Activities", to: "/admin/activities" },
+    { label: "Students", to: "/admin/students" },
     { label: "Reports", to: "/admin/reports" },
      
   ];
@@ -46,7 +48,7 @@ export default function Sidebar({ role, open, onClose, onLogout }) {
   const baseTeacherLinks = [
     { label: "Dashboard", to: "/teacher" },
     ...(isClassTeacher ? [{ label: "Classroom", to: "/teacher/classroom" }] : []),
-    ...(isSWDCoordinator ? [{ label: "SWD Approvals", to: "/teacher/swd-approvals" }] : []),
+    ...(isSDWCoordinator ? [{ label: "SDW Approvals", to: "/teacher/sdw-approvals" }] : []),
   ];
 
   const moreTeacherLinks = [

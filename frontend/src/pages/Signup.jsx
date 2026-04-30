@@ -123,7 +123,7 @@ export default function Signup() {
               <option value="head-of-department">Head of Department</option>
               <option value="assistant-professor">Assistant Professor</option>
               <option value="associate-professor">Associate Professor</option>
-              <option value="full-professor">SDW coordinator</option>
+              <option value="full-professor">SDW Coordinator</option>
             </select>
           </label>
 

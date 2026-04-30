@@ -15,6 +15,11 @@ export async function getTeacherClassrooms(teacherId) {
   return response.data;
 }
 
+export async function getAllClassrooms() {
+  const response = await API.get("/classrooms/all");
+  return response.data;
+}
+
 export async function joinDepartment(payload) {
   const response = await API.post("/classrooms/join-department", payload);
   return response.data;
@@ -37,5 +42,10 @@ export async function rejectStudent(payload) {
 
 export async function removeStudent(payload) {
   const response = await API.post("/classrooms/remove-student", payload);
+  return response.data;
+}
+
+export async function deleteClassroom(classroomId) {
+  const response = await API.delete(`/classrooms/${classroomId}`);
   return response.data;
 }

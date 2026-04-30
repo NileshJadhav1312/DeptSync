@@ -4,10 +4,10 @@ export default function BookPublicationDetailsModal({ isOpen, onClose, book }) {
   if (!isOpen || !book) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose} />
       <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl max-h-[90vh] flex flex-col">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div className="p-8 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
           <h2 className="text-xl font-bold text-slate-900">Book Publication Details</h2>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

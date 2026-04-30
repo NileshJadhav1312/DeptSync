@@ -36,6 +36,18 @@ exports.getTeacherClassrooms = async (req, res) => {
   }
 };
 
+exports.getAllClassrooms = async (req, res) => {
+  try {
+    const classrooms = await Classroom.find({})
+      .populate("classTeacherId", "firstName lastName")
+      .populate("pendingStudents", "firstName lastName prnNumber username email")
+      .populate("enrolledStudents", "firstName lastName prnNumber username email");
+    return res.status(200).json({ success: true, classrooms });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 exports.joinDepartment = async (req, res) => {
   try {
     const { studentId, departmentUid } = req.body;
@@ -166,6 +178,47 @@ exports.removeStudent = async (req, res) => {
     return res.status(200).json({ success: true, message: "Student removed from classroom." });
   } catch (error) {
     console.error("removeStudent fail:", error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteClassroom = async (req, res) => {
+  try {
+    const { classroomId } = req.params;
+    const classroom = await Classroom.findById(classroomId);
+    if (!classroom) {
+      return res.status(404).json({ message: "Classroom not found." });
+    }
+
+    // Remove classroom from enrolled students
+    for (const studentId of classroom.enrolledStudents) {
+      const student = await Student.findById(studentId);
+      if (student) {
+        if (student.enrolledClassroomId) {
+          student.pastClassrooms.push({
+            classroomId: student.enrolledClassroomId,
+            className: student.className
+          });
+        }
+        student.enrolledClassroomId = undefined;
+        student.classTeacherId = undefined;
+        student.className = "";
+        await student.save();
+      }
+    }
+
+    // Remove classroom from pending students
+    for (const studentId of classroom.pendingStudents) {
+      await Student.findByIdAndUpdate(studentId, {
+        $unset: { pendingClassroomId: 1 }
+      });
+    }
+
+    // Delete the classroom
+    await Classroom.findByIdAndDelete(classroomId);
+
+    return res.status(200).json({ success: true, message: "Classroom deleted successfully." });
+  } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };

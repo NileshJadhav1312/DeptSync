@@ -4,7 +4,7 @@ export default function AchievementDetailsModal({ isOpen, onClose, achievement }
   if (!isOpen || !achievement) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose} />
       
       <div className="relative w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -19,7 +19,7 @@ export default function AchievementDetailsModal({ isOpen, onClose, achievement }
                 {achievement.name}
               </h2>
             </div>
-            <button onClick={onClose} className="p-2 text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-all active:scale-90">
+            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -67,7 +67,7 @@ export default function AchievementDetailsModal({ isOpen, onClose, achievement }
           )}
         </div>
 
-        <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-3 shrink-0">
+        <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
           <button onClick={onClose} className="px-8 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all">
             Close Panel
           </button>

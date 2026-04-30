@@ -23,7 +23,7 @@ const emptyTeacher = {
   designations: [],
 };
 const DESIGNATION_OPTIONS = [
-  "Associate Professor", "HOD", "SWD Coordinator", "Assistant Professor", "Clerk", "Junior Professor", "NAAC Coordinator", "Research Coordinator", "Class Teacher", "other", "Faculty development ",
+  "Associate Professor", "HOD", "SDW Coordinator", "Assistant Professor", "Clerk", "Junior Professor", "NAAC Coordinator", "Research Coordinator", "Class Teacher", "other", "Faculty development ",
 ];
 
 export default function DepartmentPage() {

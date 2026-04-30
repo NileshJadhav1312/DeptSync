@@ -4,9 +4,12 @@ import DashboardLayout from "../../components/common/DashboardLayout";
 import Card from "../../components/common/Card";
 import { useAuth } from "../../context/AuthContext";
 import { createDepartment, createTeacher, getDepartments, getTeachers, updateTeacher, deleteTeacher } from "../../services/admin";
+import { getActivities, deleteActivity } from "../../services/activity";
+import { getAllClassrooms } from "../../services/classroom";
 import CreateDepartmentModal from "../../components/admin/CreateDepartmentModal";
 import EditTeacherModal from "../../components/admin/EditTeacherModal";
 import TeacherDetailsModal from "../../components/admin/TeacherDetailsModal";
+import ActivityDetailsModal from "../../components/teacher/ActivityDetailsModal";
 
 
 const emptyTeacher = {
@@ -23,10 +26,14 @@ export default function AdminDashboard() {
 
   const [departments, setDepartments] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [classrooms, setClassrooms] = useState([]);
   const [isDepModalOpen, setIsDepModalOpen] = useState(false);
   const [isEditTeacherModalOpen, setIsEditTeacherModalOpen] = useState(false);
   const [isViewTeacherModalOpen, setIsViewTeacherModalOpen] = useState(false);
+  const [isViewActivityModalOpen, setIsViewActivityModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [selectedActivity, setSelectedActivity] = useState(null);
   const [isTeacherUpdating, setIsTeacherUpdating] = useState(false);
 
   const [error, setError] = useState("");
@@ -36,6 +43,8 @@ export default function AdminDashboard() {
   const isDashboard = currentSection === "dashboard";
   const isDepartments = currentSection === "departments";
   const isTeachers = currentSection === "teachers";
+  const isActivities = currentSection === "activities";
+  const isStudents = currentSection === "students";
   const isReports = currentSection === "reports";
 
   useEffect(() => {
@@ -44,10 +53,12 @@ export default function AdminDashboard() {
 
   const refreshData = async () => {
     try {
-      const [departmentData, teacherData] = await Promise.all([getDepartments(), getTeachers()]);
+      const [departmentData, teacherData, activityData, classroomData] = await Promise.all([getDepartments(), getTeachers(), getActivities(), getAllClassrooms()]);
       const nextDepartments = departmentData.departments || [];
       setDepartments(nextDepartments);
       setTeachers(teacherData.teachers || []);
+      setActivities(activityData.activities || []);
+      setClassrooms(classroomData.classrooms || []);
     } catch (err) {
       setError(err?.response?.data?.message || "Unable to load admin data.");
     }
@@ -94,6 +105,24 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleViewActivity = (activity) => {
+    setSelectedActivity(activity);
+    setIsViewActivityModalOpen(true);
+  };
+
+  const handleDeleteActivity = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this activity? This action cannot be undone.")) return;
+    try {
+      await deleteActivity(id);
+      setSuccess("Activity deleted successfully!");
+      await refreshData();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to delete activity.");
+      setTimeout(() => setError(""), 3000);
+    }
+  };
+
   const openEditModal = (teacher) => {
     setSelectedTeacher(teacher);
     setIsEditTeacherModalOpen(true);
@@ -116,6 +145,8 @@ export default function AdminDashboard() {
     dashboard: "Admin Dashboard",
     departments: "Departments",
     teachers: "Teachers",
+    activities: "Activities",
+    students: "Students",
     reports: "Reports",
   }[currentSection] || "Admin Dashboard";
 
@@ -123,6 +154,8 @@ export default function AdminDashboard() {
     dashboard: "Overview of departments, teachers, and activity.",
     departments: "Create departments and manage academic units.",
     teachers: "View all teachers and add new accounts.",
+    activities: "View and manage all departmental activities.",
+    students: "View all students across all classrooms.",
     reports: "Quick insights from your current academic data.",
   }[currentSection] || "Manage departments and teachers.";
 
@@ -168,6 +201,12 @@ export default function AdminDashboard() {
         isOpen={isViewTeacherModalOpen}
         onClose={() => setIsViewTeacherModalOpen(false)}
         teacher={selectedTeacher}
+      />
+
+      <ActivityDetailsModal
+        isOpen={isViewActivityModalOpen}
+        onClose={() => setIsViewActivityModalOpen(false)}
+        activity={selectedActivity}
       />
 
       {(isDashboard || isReports) && (
@@ -416,6 +455,120 @@ export default function AdminDashboard() {
                     )}
                   </div>
                 </article>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {isActivities && (
+        <section className="mb-6 sm:mb-8">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <div>
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-900">Activities Management</h3>
+              <p className="text-sm text-slate-500 mt-1">View and manage all departmental activities.</p>
+            </div>
+            <div className="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+              {activities.length} activit{activities.length !== 1 ? "ies" : "y"}
+            </div>
+          </div>
+
+          {activities.length === 0 ? (
+            <div className="card p-8 text-center">
+              <h4 className="text-lg font-semibold text-slate-900 mb-2">No activities found</h4>
+              <p className="text-slate-500">Activities will appear here when teachers add them.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse bg-white rounded-lg shadow-sm border border-slate-200">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Activity Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Academic Year</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Level</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {activities.map((activity) => (
+                    <tr key={activity._id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3 text-sm font-medium text-slate-900">{activity.activityName}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500">{activity.activityType}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500">{activity.academicYear}</td>
+                      <td className="px-4 py-3 text-sm text-slate-500">{activity.activityLevel}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleViewActivity(activity)}
+                            className="text-indigo-600 hover:text-indigo-900 font-medium"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => handleDeleteActivity(activity._id)}
+                            className="text-red-600 hover:text-red-900 font-medium"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      {isStudents && (
+        <section className="mb-6 sm:mb-8">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <div>
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-900">Students Management</h3>
+              <p className="text-sm text-slate-500 mt-1">View all students across all classrooms.</p>
+            </div>
+            <div className="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+              {classrooms.reduce((sum, c) => sum + (c.enrolledStudents?.length || 0), 0)} student{classrooms.reduce((sum, c) => sum + (c.enrolledStudents?.length || 0), 0) !== 1 ? "s" : ""}
+            </div>
+          </div>
+
+          {classrooms.length === 0 ? (
+            <div className="card p-8 text-center">
+              <h4 className="text-lg font-semibold text-slate-900 mb-2">No classrooms found</h4>
+              <p className="text-slate-500">Create classrooms first to see students.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {classrooms.map((classroom) => (
+                <div key={classroom._id} className="card p-6">
+                  <h4 className="text-lg font-bold text-slate-900 mb-4">{classroom.name}</h4>
+                  {classroom.enrolledStudents?.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse bg-white rounded-lg shadow-sm border border-slate-200">
+                        <thead className="bg-slate-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Name</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">PRN</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Email</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                          {classroom.enrolledStudents.map((student) => (
+                            <tr key={student._id} className="hover:bg-slate-50">
+                              <td className="px-4 py-3 text-sm font-medium text-slate-900">{student.firstName} {student.lastName}</td>
+                              <td className="px-4 py-3 text-sm text-slate-500">{student.prnNumber}</td>
+                              <td className="px-4 py-3 text-sm text-slate-500">{student.email}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-slate-500">No enrolled students in this classroom.</p>
+                  )}
+                </div>
               ))}
             </div>
           )}

@@ -113,7 +113,7 @@ export function GrantFormModal({ isOpen, onClose, onSubmit, initialData }) {
   const handleChange = (e) => setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
   const handleFormSubmit = async (e) => { e.preventDefault(); setLoading(true); try { await onSubmit(formData); onClose(); } catch (err) { alert(err?.message || "Failed."); } finally { setLoading(false); } };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"><div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} /><div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl flex flex-col p-8 overflow-y-auto max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"><div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} /><div className="relative w-full max-w-4xl bg-white rounded-[2rem] shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
       <h2 className="text-2xl font-bold mb-6">{initialData ? "Edit Grant" : "Add Grant"}</h2>
       <form onSubmit={handleFormSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <input required name="academicYear" value={formData.academicYear} onChange={handleChange} className="input" placeholder="Academic Year (e.g. 2024-25)" />

@@ -139,7 +139,7 @@ export default function JournalPublicationFormModal({ isOpen, onClose, onSubmit,
             <h2 className="text-2xl font-bold text-slate-900">{initialData ? "Edit Journal Details" : "Add Journal Details"}</h2>
             <p className="text-sm text-slate-500 mt-1">Provide comprehensive details about your journal publication.</p>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-all">
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>

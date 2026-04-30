@@ -65,7 +65,7 @@ export default function PatentFormModal({ isOpen, onClose, onSubmit, initialData
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto bg-slate-900/60 backdrop-blur-md">
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden my-8 border border-slate-200">
         <div className="bg-indigo-600 px-8 py-6 text-white sticky top-0 z-10 shadow-md flex justify-between items-start">
           <div>

@@ -83,8 +83,8 @@ export function PatentFormModal({ isOpen, onClose, onSubmit, initialData }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose} />
       <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
           <h2 className="text-xl font-bold">{initialData ? "Edit Patent" : "Add Patent"}</h2>

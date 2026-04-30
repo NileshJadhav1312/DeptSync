@@ -9,7 +9,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getTeacherProfile } from "../../services/profile";
 import { getActivities, createActivity, updateActivity, deleteActivity } from "../../services/activity";
 import { getAchievements, createAchievement, updateAchievement, deleteAchievement, getDepartmentAchievements, reviewAchievement } from "../../services/achievement";
-import { getTeacherClassrooms, createClassroom, acceptStudent, rejectStudent, removeStudent } from "../../services/classroom";
+import { getTeacherClassrooms, createClassroom, acceptStudent, rejectStudent, removeStudent, deleteClassroom } from "../../services/classroom";
 import CreateClassroomModal from "../../components/teacher/CreateClassroomModal";
 import StudentDetailsModal from "../../components/teacher/StudentDetailsModal";
 import ActivityFormModal from "../../components/teacher/ActivityFormModal";
@@ -68,6 +68,9 @@ export default function TeacherDashboard() {
   const [classrooms, setClassrooms] = useState([]);
   const [isClassroomModalOpen, setIsClassroomModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedClassroom, setSelectedClassroom] = useState(null);
+  const [selectedClassroomForPending, setSelectedClassroomForPending] = useState(null);
+  const [classroomView, setClassroomView] = useState('students'); // 'pending' or 'students'
 
   const [departmentAchievements, setDepartmentAchievements] = useState([]);
   const [departmentConferences, setDepartmentConferences] = useState([]);
@@ -125,7 +128,7 @@ export default function TeacherDashboard() {
   const isActivities = section === "activities";
   const isAchievements = section === "achievements";
   const isClassroom = section === "classroom";
-  const isSWDApprovals = section === "swd-approvals";
+  const isSDWApprovals = section === "sdw-approvals";
 
   const isResearchPapers = section === "research-papers";
   const isBookPublications = section === "book-publications";
@@ -139,8 +142,11 @@ export default function TeacherDashboard() {
   const isPatents = section === "patents";
   const isCopyrights = section === "copyrights";
 
-  const isClassTeacher = profileData?.designations?.includes("Class Teacher") || classrooms.length > 0;
-  const isSWDCoordinator = profileData?.designations?.includes("SWD Coordinator");
+  const sortedClassrooms = useMemo(() => {
+    return [...classrooms].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  }, [classrooms]);
+  const isClassTeacher = profileData?.designations?.includes("Class Teacher");
+  const isSDWCoordinator = profileData?.designations?.includes("SDW Coordinator");
 
   useEffect(() => {
     if (user?.id) {
@@ -168,11 +174,11 @@ export default function TeacherDashboard() {
   };
 
   useEffect(() => {
-    if (isSWDApprovals && isSWDCoordinator && profileData?.departmentId) {
+    if (isSDWApprovals && isSDWCoordinator && profileData?.departmentId) {
       fetchDepartmentAchievements();
       fetchDepartmentConferences();
     }
-  }, [isSWDApprovals, isSWDCoordinator, profileData?.departmentId]);
+  }, [isSDWApprovals, isSDWCoordinator, profileData?.departmentId]);
 
   const fetchDepartmentAchievements = async () => {
     if (!profileData?.departmentId) return;
@@ -525,6 +531,14 @@ export default function TeacherDashboard() {
       await acceptStudent({ studentId, classId });
       alert("Student enrolled!");
       fetchClassrooms();
+      // Update selectedClassroom if it's the current one
+      if (selectedClassroom && selectedClassroom._id === classId) {
+        setSelectedClassroom(prev => ({
+          ...prev,
+          pendingStudents: prev.pendingStudents.filter(s => s._id !== studentId),
+          enrolledStudents: [...prev.enrolledStudents, ...prev.pendingStudents.filter(s => s._id === studentId)]
+        }));
+      }
     } catch (err) { alert("Error enrolling student"); }
   };
 
@@ -533,6 +547,13 @@ export default function TeacherDashboard() {
       await rejectStudent({ studentId, classId });
       alert("Request rejected!");
       fetchClassrooms();
+      // Update selectedClassroom if it's the current one
+      if (selectedClassroom && selectedClassroom._id === classId) {
+        setSelectedClassroom(prev => ({
+          ...prev,
+          pendingStudents: prev.pendingStudents.filter(s => s._id !== studentId)
+        }));
+      }
     } catch (err) { alert("Error rejecting student"); }
   };
 
@@ -542,7 +563,27 @@ export default function TeacherDashboard() {
         await removeStudent({ studentId, classId });
         alert("Student disenrolled!");
         fetchClassrooms();
+        // Update selectedClassroom if it's the current one
+        if (selectedClassroom && selectedClassroom._id === classId) {
+          setSelectedClassroom(prev => ({
+            ...prev,
+            enrolledStudents: prev.enrolledStudents.filter(s => s._id !== studentId)
+          }));
+        }
       } catch (err) { alert("Error disenrolling student"); }
+    }
+  };
+
+  const handleDeleteClassroom = async (classroomId) => {
+    if (window.confirm("Are you sure you want to delete this classroom? This action cannot be undone.")) {
+      try {
+        await deleteClassroom(classroomId);
+        alert("Classroom deleted successfully!");
+        fetchClassrooms();
+      } catch (err) {
+        alert("Error deleting classroom");
+        console.error(err);
+      }
     }
   };
 
@@ -649,7 +690,7 @@ export default function TeacherDashboard() {
 
   const stats = [
     ...(isClassTeacher ? [{ title: "Class Achievements", value: "View", helper: "Track student progress", onClick: () => navigate("/teacher/classroom"), className: "cursor-pointer hover:shadow-lg hover:border-red-300 transition-all border-l-4 border-l-red-500 shadow-sm" }] : []),
-    ...(isSWDCoordinator ? [{ title: "SWD Approvals", value: departmentAchievements.length, helper: "Pending reviews", onClick: () => navigate("/teacher/swd-approvals"), className: "cursor-pointer hover:shadow-lg hover:border-pink-300 transition-all border-l-4 border-pink-500 shadow-sm" }] : []),
+    ...(isSDWCoordinator ? [{ title: "SDW Approvals", value: departmentAchievements.length, helper: "Pending reviews", onClick: () => navigate("/teacher/sdw-approvals"), className: "cursor-pointer hover:shadow-lg hover:border-pink-300 transition-all border-l-4 border-pink-500 shadow-sm" }] : []),
     { title: "Total Activities", value: myActivities.length, helper: "Departmental Activities", onClick: () => navigate("/teacher/activities"), className: "cursor-pointer hover:shadow-lg hover:border-slate-300 transition-all border-l-4 border-l-slate-500 shadow-sm" },
     { title: "Total Achievements", value: myAchievements.length, helper: "Personal Scholarly Gains", onClick: () => navigate("/teacher/achievements"), className: "cursor-pointer hover:shadow-lg hover:border-amber-300 transition-all border-l-4 border-l-amber-500 shadow-sm" },
     { title: "Research Papers", value: researchPapers.length, helper: "Published/Accepted", onClick: () => navigate("/teacher/research-papers"), className: "cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all border-l-4 border-l-indigo-500 shadow-sm" },
@@ -672,7 +713,7 @@ export default function TeacherDashboard() {
         isActivities ? "Manage Activities" :
           isAchievements ? "Manage Achievements" :
             isClassroom ? "Classroom Management" :
-              isSWDApprovals ? "SWD Approvals" :
+              isSDWApprovals ? "SDW Approvals" :
                 isResearchPapers ? "Research Papers" :
                   isBookPublications ? "Book Publications" :
                     isGrants ? "Research Grants" :
@@ -690,7 +731,7 @@ export default function TeacherDashboard() {
         isActivities ? "Add, modify or delete your departmental activities." :
           isAchievements ? "Add, modify or delete your scholarly achievements." :
             isClassroom ? "Manage your class and students." :
-              isSWDApprovals ? "Review student achievements from your department." :
+              isSDWApprovals ? "Review student achievements from your department." :
                 "Track your academic contributions and professional activities."
       }
       actions={
@@ -739,6 +780,162 @@ export default function TeacherDashboard() {
         onClose={() => setSelectedStudent(null)}
         student={selectedStudent}
       />
+
+      {/* Student List Modal */}
+      {selectedClassroom && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="card w-full max-w-4xl shadow-2xl bg-white border border-slate-200 p-6 rounded-xl max-h-[80vh] overflow-hidden">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-slate-900">
+                Students in {selectedClassroom.name} ({selectedClassroom.enrolledStudents.length})
+              </h2>
+              <button
+                onClick={() => setSelectedClassroom(null)}
+                className="text-slate-400 hover:text-slate-600 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="overflow-y-auto max-h-[60vh]">
+              {selectedClassroom.enrolledStudents.length === 0 ? (
+                <p className="text-slate-500 text-center py-8">No students enrolled in this classroom.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-slate-600">
+                    <thead className="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-200">
+                      <tr>
+                        <th className="px-4 py-3 font-semibold">PRN Number</th>
+                        <th className="px-4 py-3 font-semibold">Name</th>
+                        <th className="px-4 py-3 font-semibold">Email</th>
+                        <th className="px-4 py-3 font-semibold">Phone</th>
+                        <th className="px-4 py-3 font-semibold">Semester</th>
+                        <th className="px-4 py-3 font-semibold text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {selectedClassroom.enrolledStudents.map(student => (
+                        <tr key={student._id} className="hover:bg-slate-50/50 transition">
+                          <td className="px-4 py-3 font-medium text-slate-800">{student.prnNumber}</td>
+                          <td className="px-4 py-3 font-bold text-slate-900">{student.firstName} {student.lastName}</td>
+                          <td className="px-4 py-3">{student.email}</td>
+                          <td className="px-4 py-3">{student.contactNumber || 'N/A'}</td>
+                          <td className="px-4 py-3">{student.semester || 'N/A'}</td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex justify-end gap-2">
+                              <button
+                                className="btn-secondary text-xs px-3 py-1"
+                                onClick={() => {
+                                  setSelectedStudent(student);
+                                  setSelectedClassroom(null);
+                                }}
+                              >
+                                View Details
+                              </button>
+                              <button
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded transition-colors text-xs font-bold uppercase"
+                                onClick={() => handleRemoveStudent(student._id, selectedClassroom._id)}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                className="btn-secondary"
+                onClick={() => setSelectedClassroom(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pending Requests Modal */}
+      {selectedClassroomForPending && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="card w-full max-w-4xl shadow-2xl bg-white border border-slate-200 p-6 rounded-xl max-h-[80vh] overflow-hidden">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-slate-900">
+                Pending Requests for {selectedClassroomForPending.name} ({selectedClassroomForPending.pendingStudents.length})
+              </h2>
+              <button
+                onClick={() => setSelectedClassroomForPending(null)}
+                className="text-slate-400 hover:text-slate-600 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="overflow-y-auto max-h-[60vh]">
+              {selectedClassroomForPending.pendingStudents.length === 0 ? (
+                <p className="text-slate-500 text-center py-8">No pending requests for this classroom.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-slate-600">
+                    <thead className="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-200">
+                      <tr>
+                        <th className="px-4 py-3 font-semibold">PRN Number</th>
+                        <th className="px-4 py-3 font-semibold">Name</th>
+                        <th className="px-4 py-3 font-semibold">Email</th>
+                        <th className="px-4 py-3 font-semibold">Phone</th>
+                        <th className="px-4 py-3 font-semibold">Semester</th>
+                        <th className="px-4 py-3 font-semibold text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {selectedClassroomForPending.pendingStudents.map(student => (
+                        <tr key={student._id} className="hover:bg-slate-50/50 transition">
+                          <td className="px-4 py-3 font-medium text-slate-800">{student.prnNumber}</td>
+                          <td className="px-4 py-3 font-bold text-slate-900">{student.firstName} {student.lastName}</td>
+                          <td className="px-4 py-3">{student.email}</td>
+                          <td className="px-4 py-3">{student.contactNumber || 'N/A'}</td>
+                          <td className="px-4 py-3">{student.semester || 'N/A'}</td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex justify-end gap-2">
+                              <button
+                                className="btn-primary bg-emerald-600 hover:bg-emerald-700 text-xs px-3 py-1"
+                                onClick={() => handleAcceptStudent(student._id, selectedClassroomForPending._id)}
+                              >
+                                Accept
+                              </button>
+                              <button
+                                className="btn-primary bg-red-600 hover:bg-red-700 text-xs px-3 py-1"
+                                onClick={() => handleRejectStudent(student._id, selectedClassroomForPending._id)}
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                className="btn-secondary"
+                onClick={() => setSelectedClassroomForPending(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ActivityFormModal
         isOpen={isActivityModalOpen}
         onClose={closeActivityModal}
@@ -909,12 +1106,12 @@ export default function TeacherDashboard() {
         </div>
       )}
 
-      {isSWDApprovals && (
+      {isSDWApprovals && (
         <div className="space-y-6">
-          {!isSWDCoordinator ? (
+          {!isSDWCoordinator ? (
             <div className="card p-8 text-center border-l-4 border-red-500 bg-red-50 text-red-700">
               <h3 className="font-bold text-lg">No Access</h3>
-              <p className="text-sm mt-2">You are not assigned the 'SWD Coordinator' designation to review department achievements.</p>
+              <p className="text-sm mt-2">You are not assigned the 'SDW Coordinator' designation to review department achievements.</p>
             </div>
           ) : (
             <>
@@ -1040,66 +1237,99 @@ export default function TeacherDashboard() {
             </div>
           ) : (
             <>
+              <div className="flex gap-4 mb-6">
+                <button
+                  className={`btn-primary ${classroomView === 'pending' ? 'bg-blue-600' : 'bg-gray-500'}`}
+                  onClick={() => setClassroomView('pending')}
+                >
+                  View Pending Requests
+                </button>
+                <button
+                  className={`btn-primary ${classroomView === 'students' ? 'bg-blue-600' : 'bg-gray-500'}`}
+                  onClick={() => setClassroomView('students')}
+                >
+                  View Student List
+                </button>
+              </div>
 
-
-              {classrooms.map(cls => (
-                <div key={cls._id} className="card p-6">
-                  <h3 className="text-xl font-bold text-slate-800 mb-2">{cls.name} <span className="text-sm font-normal text-slate-500">[{cls.enrolledStudents.length} Enrolled]</span></h3>
-                  <div className="mb-4 inline-block bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-1.5 shadow-sm text-sm">
-                    <span className="font-semibold text-slate-600">Class Code:</span> <span className="font-bold text-indigo-700 tracking-wider ml-1">{cls.classroomCode || "N/A"}</span>
-                  </div>
-
-                  {cls.pendingStudents.length > 0 && (
-                    <div className="mb-6">
-                      <h4 className="font-semibold text-orange-600 mb-2">Pending Requests ({cls.pendingStudents.length})</h4>
-                      <ul className="divide-y divide-slate-100 border border-slate-100 rounded bg-slate-50">
-                        {cls.pendingStudents.map(student => (
-                          <li key={student._id} className="p-3 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-                            <span className="font-medium text-slate-700">{student.prnNumber} - {student.firstName} {student.lastName}</span>
-                            <div className="flex gap-2">
-                              <button className="btn-primary bg-emerald-600 hover:bg-emerald-700 text-[10px] w-auto px-3 py-1" onClick={() => handleAcceptStudent(student._id, cls._id)}>Accept</button>
-                              <button className="btn-primary bg-red-600 hover:bg-red-700 text-[10px] w-auto px-3 py-1" onClick={() => handleRejectStudent(student._id, cls._id)}>Reject</button>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sortedClassrooms.map(cls => (
+                  <div key={cls._id} className="card p-6">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-xl font-bold text-slate-800">{cls.name} <span className="text-sm font-normal text-slate-500">[{cls.enrolledStudents.length} Enrolled]</span></h3>
+                      <button
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded transition-colors text-sm font-bold uppercase"
+                        onClick={() => handleDeleteClassroom(cls._id)}
+                      >
+                        Delete
+                      </button>
                     </div>
-                  )}
+                    <div className="mb-4 inline-block bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-1.5 shadow-sm text-sm">
+                      <span className="font-semibold text-slate-600">Class Code:</span> <span className="font-bold text-indigo-700 tracking-wider ml-1">{cls.classroomCode || "N/A"}</span>
+                    </div>
 
-                  <div>
-                    <h4 className="font-semibold text-green-700 mb-4 mt-6">Enrolled Students</h4>
-                    {cls.enrolledStudents.length === 0 ? <p className="text-slate-500 text-sm italic">No students enrolled yet.</p> : (
-                      <div className="overflow-x-auto rounded-lg border border-slate-200">
-                        <table className="w-full text-left text-sm text-slate-600">
-                          <thead className="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-200">
-                            <tr>
-                              <th className="px-4 py-3 font-semibold">PRN Number</th>
-                              <th className="px-4 py-3 font-semibold">Student Name</th>
-                              <th className="px-4 py-3 font-semibold">Email</th>
-                              <th className="px-4 py-3 font-semibold text-right">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {cls.enrolledStudents.map(student => (
-                              <tr key={student._id} className="hover:bg-slate-50/50 transition">
-                                <td className="px-4 py-3 font-medium text-slate-800">{student.prnNumber}</td>
-                                <td className="px-4 py-3 font-bold text-slate-900">{student.firstName} {student.lastName}</td>
-                                <td className="px-4 py-3">{student.email}</td>
-                                <td className="px-4 py-3 text-right">
-                                  <div className="flex justify-end gap-2">
-                                    <button className="btn-secondary text-[10px] uppercase font-bold px-2 py-1" onClick={() => setSelectedStudent(student)}>View Details</button>
-                                    <button className="text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors text-[10px] font-bold uppercase" onClick={() => handleRemoveStudent(student._id, cls._id)}>Disenroll</button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                    {classroomView === 'pending' && (
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <h4 className="font-semibold text-orange-600">Pending Requests ({cls.pendingStudents.length})</h4>
+                          <button
+                            className="btn-primary text-xs px-3 py-1"
+                            onClick={() => setSelectedClassroomForPending(cls)}
+                          >
+                            View List
+                          </button>
+                        </div>
+                        {cls.pendingStudents.length === 0 ? <p className="text-slate-500 text-sm italic">No pending requests.</p> : (
+                          <div className="max-h-40 overflow-y-auto">
+                            <ul className="divide-y divide-slate-100">
+                              {cls.pendingStudents.slice(0, 3).map(student => (
+                                <li key={student._id} className="py-2">
+                                  <span className="font-medium text-slate-700 text-sm">{student.prnNumber} - {student.firstName} {student.lastName}</span>
+                                </li>
+                              ))}
+                              {cls.pendingStudents.length > 3 && (
+                                <li className="py-2 text-center">
+                                  <span className="text-slate-500 text-sm">... and {cls.pendingStudents.length - 3} more</span>
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {classroomView === 'students' && (
+                      <div>
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="font-semibold text-green-700">Enrolled Students ({cls.enrolledStudents.length})</h4>
+                          <button
+                            className="btn-primary text-xs px-3 py-1"
+                            onClick={() => setSelectedClassroom(cls)}
+                          >
+                            View List
+                          </button>
+                        </div>
+                        {cls.enrolledStudents.length === 0 ? <p className="text-slate-500 text-sm italic">No students enrolled yet.</p> : (
+                          <div className="max-h-40 overflow-y-auto">
+                            <ul className="divide-y divide-slate-100">
+                              {cls.enrolledStudents.slice(0, 3).map(student => (
+                                <li key={student._id} className="py-2">
+                                  <span className="font-medium text-slate-700 text-sm">{student.prnNumber} - {student.firstName} {student.lastName}</span>
+                                </li>
+                              ))}
+                              {cls.enrolledStudents.length > 3 && (
+                                <li className="py-2 text-center">
+                                  <span className="text-slate-500 text-sm">... and {cls.enrolledStudents.length - 3} more</span>
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </>
           )}
         </div>

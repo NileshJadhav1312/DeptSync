@@ -3,7 +3,7 @@ import { useState } from "react";
 const DESIGNATION_OPTIONS = [
   "Associate Professor",
   "HOD",
-  "SWD Coordinator",
+  "SDW Coordinator",
   "Assistant Professor",
   "Clerk",
   "Junior Professor",

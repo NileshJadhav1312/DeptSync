@@ -102,7 +102,7 @@ export function CommitteeFormModal({ isOpen, onClose, onSubmit, initialData }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-8 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-4xl bg-white rounded-[2rem] shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
         <h2 className="text-2xl font-bold mb-6">Committee Membership</h2>
         <form onSubmit={hS} className="space-y-4 shadow-none">
           <input required name="committeeName" value={formData.committeeName} onChange={hC} className="input" placeholder="Committee Name" /> 
