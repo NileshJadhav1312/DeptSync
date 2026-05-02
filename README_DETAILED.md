@@ -122,6 +122,27 @@ This module manages the state transitions of academic data.
     *   **Atomic Operations**: The system uses Mongoose middleware and pre-save hooks to ensure that data is validated against the schema before being committed to the database.
     *   **Fail-Safe Querying**: Implementation of robust error handling in the API layer ensures that database connection issues or malformed requests do not result in "Zombie Records" or partial data saving.
 
+### 3.3 External Interface Requirements
+
+#### 3.3.1 User Interfaces
+*   **Dashboards**: Responsive, role-specific interfaces for Students (Submission tracking), Teachers (Reviewing queue), and Admins (Departmental overview).
+*   **Contribution Wizards**: Intuitive forms for capturing metadata for Journals, Patents, and Projects with real-time validation.
+*   **Document Previewer**: An integrated interface allowing faculty to preview PDF/Image proofs (Certificates/Papers) directly within the dashboard.
+*   **Status Notifications**: System-generated alerts for events such as "Research Approved," "Revision Required," or "New Submission Received."
+
+#### 3.3.2 Hardware Interfaces
+*   **Camera / Image Scanner**: Hardware interface support for mobile devices to capture high-quality photos of physical certificates and publication proofs for direct upload.
+
+#### 3.3.3 Software Interfaces
+*   **Cloud Storage API (e.g., AWS S3 / Cloudinary)**: Utilized for the secure storage, retrieval, and delivery of high-resolution supporting documents and proofs.
+*   **Email Gateway (e.g., Nodemailer / SendGrid)**: Integrated for sending automated transactional emails, including registration confirmations and status update alerts.
+*   **Data Export API**: Interfaces to transform and export verified research data into institutional formats such as **Excel, CSV, and PDF** for external reporting (NAAC/NIRF).
+
+#### 3.3.4 Communications Interfaces
+*   **RESTful APIs**: The application facilitates communication between the React frontend and Node.js backend via secure RESTful endpoints.
+*   **HTTPS / TLS**: All external communication is encrypted over HTTPS using Transport Layer Security (TLS 1.3) to ensure data privacy.
+*   **WebSockets (Socket.io)**: (Optional) Employed for real-time dashboard updates and notification badges to enhance user responsiveness.
+
 ---
 
 ## 4. System Design (UML)
