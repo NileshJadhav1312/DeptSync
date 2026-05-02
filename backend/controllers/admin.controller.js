@@ -4,7 +4,6 @@ const Department = require("../models/department.model");
 const Teacher = require("../models/teacher.model");
 const Student = require("../models/student.model");
 const ActivityDetails = require("../models/activityDetails.model");
-const ResearchPaper = require("../models/researchPaper.model");
 const BookPublication = require("../models/bookPublication.model");
 const Grant = require("../models/grant.model");
 const Consultancy = require("../models/consultancy.model");
@@ -14,6 +13,9 @@ const EditorialBoard = require("../models/editorialBoard.model");
 const JournalPublication = require("../models/journalPublication.model");
 const ConferencePublication = require("../models/conferencePublication.model");
 const BookChapter = require("../models/bookChapter.model");
+const Patent = require("../models/patent.model");
+const Copyright = require("../models/copyright.model");
+const Project = require("../models/project.model");
 
 async function resolveAdminId(createdBy) {
   if (!createdBy) return null;
@@ -90,9 +92,8 @@ async function getTeachers(req, res) {
 
     const teachersWithCounts = await Promise.all(
       teachers.map(async (teacher) => {
-        const [activitiesCount, papersCount, booksCount, grantsCount, consultanciesCount, achievementsCount, committeesCount, editorialCount, journalsCount, conferencesCount, chaptersCount] = await Promise.all([
+        const [activitiesCount, booksCount, grantsCount, consultanciesCount, achievementsCount, committeesCount, editorialCount, journalsCount, conferencesCount, chaptersCount] = await Promise.all([
           ActivityDetails.countDocuments({ createdBy: teacher._id }),
-          ResearchPaper.countDocuments({ teacherId: teacher._id }),
           BookPublication.countDocuments({ teacherId: teacher._id }),
           Grant.countDocuments({ teacherId: teacher._id }),
           Consultancy.countDocuments({ teacherId: teacher._id }),
@@ -104,13 +105,12 @@ async function getTeachers(req, res) {
           BookChapter.countDocuments({ teacherId: teacher._id })
         ]);
 
-        const totalContributions = activitiesCount + papersCount + booksCount + grantsCount + consultanciesCount + achievementsCount + committeesCount + editorialCount + journalsCount + conferencesCount + chaptersCount;
+        const totalContributions = activitiesCount + booksCount + grantsCount + consultanciesCount + achievementsCount + committeesCount + editorialCount + journalsCount + conferencesCount + chaptersCount;
 
         return {
           ...teacher,
           counts: {
             activities: activitiesCount,
-            papers: papersCount,
             books: booksCount,
             grants: grantsCount,
             consultancies: consultanciesCount,
@@ -163,6 +163,7 @@ async function createTeacher(req, res) {
     } = req.body;
 
     const resolvedCreatedBy = await resolveAdminId(createdBy);
+
     if (!departmentId || !email || !username || !password || !confirmPassword || !resolvedCreatedBy || !employeeId) {
       return res.status(400).json({ message: "Missing required teacher fields (including employee ID) or invalid createdBy." });
     }
@@ -183,19 +184,17 @@ async function createTeacher(req, res) {
     }
 
     const existingUsername = await Teacher.findOne({ 
-      username: username.trim(), 
-      departmentId: department._id 
+      username: username.trim()
     });
     if (existingUsername) {
-      return res.status(409).json({ message: "Teacher already exists with this username in this department." });
+      return res.status(409).json({ message: "Teacher already exists with this username." });
     }
 
     const existingEmployeeId = await Teacher.findOne({ 
-      employeeId: employeeId.trim(), 
-      departmentId: department._id 
+      employeeId: employeeId.trim()
     });
     if (existingEmployeeId) {
-      return res.status(409).json({ message: "Teacher already exists with this employee ID in this department." });
+      return res.status(409).json({ message: "Teacher already exists with this employee ID." });
     }
 
     const teacher = await Teacher.create({
@@ -288,24 +287,59 @@ async function getDepartmentStudents(req, res) {
   try {
     const { departmentId } = req.params;
     const students = await Student.find({ 
-      departmentId,
-      enrolledClassroomId: { $exists: true, $ne: null }
+      departmentId
     }).select("-password").sort({ createdAt: -1 }).lean();
 
     const studentsWithCounts = await Promise.all(
       students.map(async (student) => {
-        const [achievementsCount, activitiesCount] = await Promise.all([
-          Achievement.countDocuments({ achievedBy: student._id }),
-          ActivityDetails.countDocuments({ createdBy: student._id })
+        const [
+          achievementsCount,
+          activitiesCount,
+          journalsCount,
+          conferencesCount,
+          grantsCount,
+          patentsCount,
+          copyrightsCount,
+          projectsCount,
+          consultanciesCount,
+          booksCount,
+          chaptersCount,
+          editorialCount,
+          committeesCount
+        ] = await Promise.all([
+          Achievement.countDocuments({ achievedBy: student._id, approvalStatus: "Approved" }),
+          ActivityDetails.countDocuments({ createdBy: student._id }), // Activities usually don't have approval or are student-led
+          JournalPublication.countDocuments({ studentId: student._id, approvalStatus: "Approved" }),
+          ConferencePublication.countDocuments({ studentId: student._id, approvalStatus: "Approved" }),
+          Grant.countDocuments({ studentId: student._id, approvalStatus: "Approved" }),
+          Patent.countDocuments({ studentId: student._id, approvalStatus: "Approved" }),
+          Copyright.countDocuments({ studentId: student._id, approvalStatus: "Approved" }),
+          Project.countDocuments({ studentId: student._id, approvalStatus: "Approved" }),
+          Consultancy.countDocuments({ studentId: student._id, approvalStatus: "Approved" }),
+          BookPublication.countDocuments({ studentId: student._id, approvalStatus: "Approved" }),
+          BookChapter.countDocuments({ studentId: student._id, approvalStatus: "Approved" }),
+          EditorialBoard.countDocuments({ studentId: student._id, approvalStatus: "Approved" }),
+          Commitee.countDocuments({ studentId: student._id, approvalStatus: "Approved" })
         ]);
 
         return {
           ...student,
           counts: {
             achievements: achievementsCount,
-            activities: activitiesCount
+            activities: activitiesCount,
+            journals: journalsCount,
+            conferences: conferencesCount,
+            grants: grantsCount,
+            patents: patentsCount,
+            copyrights: copyrightsCount,
+            projects: projectsCount,
+            consultancies: consultanciesCount,
+            books: booksCount,
+            chapters: chaptersCount,
+            editorial: editorialCount,
+            committees: committeesCount
           },
-          totalContributions: achievementsCount + activitiesCount
+          totalContributions: achievementsCount + activitiesCount + journalsCount + conferencesCount + grantsCount + patentsCount + copyrightsCount + projectsCount + consultanciesCount + booksCount + chaptersCount + editorialCount + committeesCount
         };
       })
     );

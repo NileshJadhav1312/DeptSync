@@ -93,45 +93,134 @@ export function CommitteesTable({ items, onEdit, onDelete }) {
 
 
 export function CommitteeFormModal({ isOpen, onClose, onSubmit, initialData }) {
-  const [formData, setFormData] = useState({ year: new Date().getFullYear(), committeeName: "", level: "Local", organization: { name: "", type: "University" }, position: "Member", committeeType: "Academic" });
+  const [formData, setFormData] = useState({
+    year: new Date().getFullYear(),
+    committeeName: "",
+    level: "Local",
+    organization: { name: "", type: "University" },
+    position: "Member",
+    committeeType: "Academic"
+  });
   const [loading, setLoading] = useState(false);
-  useEffect(() => { if (isOpen && initialData) setFormData(initialData); else if (isOpen && !initialData) setFormData({ year: new Date().getFullYear(), committeeName: "", level: "Local", organization: { name: "", type: "University" }, position: "Member", committeeType: "Academic" }); }, [isOpen, initialData]);
+
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setFormData(initialData);
+    } else if (isOpen && !initialData) {
+      setFormData({
+        year: new Date().getFullYear(),
+        committeeName: "",
+        level: "Local",
+        organization: { name: "", type: "University" },
+        position: "Member",
+        committeeType: "Academic"
+      });
+    }
+  }, [isOpen, initialData]);
+
   if (!isOpen) return null;
-  const hC = (e) => { const { name, value } = e.target; if (name.includes(".")) { const [p, c] = name.split("."); setFormData(p_ => ({ ...p_, [p]: { ...p_[p], [c]: value } })); } else { setFormData(p_ => ({ ...p_, [name]: value })); } };
-  const hS = async (e) => { e.preventDefault(); setLoading(true); try { await onSubmit(formData); onClose(); } catch (err) { alert(err.message); } finally { setLoading(false); } };
+
+  const hC = (e) => {
+    const { name, value } = e.target;
+    if (name.includes(".")) {
+      const [p, c] = name.split(".");
+      setFormData(p_ => ({ ...p_, [p]: { ...p_[p], [c]: value } }));
+    } else {
+      setFormData(p_ => ({ ...p_, [name]: value }));
+    }
+  };
+
+  const hS = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await onSubmit(formData);
+      onClose();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
       <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-4xl bg-white rounded-[2rem] shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
-        <h2 className="text-2xl font-bold mb-6">Committee Membership</h2>
-        <form onSubmit={hS} className="space-y-4 shadow-none">
-          <input required name="committeeName" value={formData.committeeName} onChange={hC} className="input" placeholder="Committee Name" /> 
-          <input required name="organization.name" value={formData.organization.name} onChange={hC} className="input" placeholder="Organization Name" />
-          <div className="grid grid-cols-2 gap-4">
-            <select name="level" value={formData.level} onChange={hC} className="input">
-              <option value="Local">Local</option>
-              <option value="National">National</option>
-              <option value="International">International</option>
-            </select>
-            <select name="position" value={formData.position} onChange={hC} className="input">
-              <option value="Chairperson">Chairperson</option>
-              <option value="Member">Member</option>
-              <option value="Coordinator">Coordinator</option>
-              <option value="Secretary">Secretary</option>
-              <option value="Advisor">Advisor</option>
-            </select>
+      <div className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl flex flex-col my-4 max-h-[90vh] overflow-hidden">
+        <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-white rounded-t-3xl">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">{initialData ? "Edit Committee Membership" : "Add Committee Membership"}</h2>
+            <p className="text-sm text-slate-500 mt-1">Provide details of your involvement in various committees or bodies.</p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <input required name="year" type="number" value={formData.year} onChange={hC} className="input" placeholder="Year" />
-            <select name="committeeType" value={formData.committeeType} onChange={hC} className="input">
-              <option value="Academic">Academic</option>
-              <option value="Research">Research</option>
-              <option value="Administrative">Administrative</option>
-            </select>
-          </div>
-          <div className="flex justify-end gap-2 pt-4">
-            <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
-            <button type="submit" disabled={loading} className="btn-primary">Save Entry</button>
-          </div></form></div></div>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-8 overflow-y-auto flex-1 scrollbar-thin">
+          <form id="committeeForm" onSubmit={hS} className="space-y-10">
+            {/* Section 1: Committee Information */}
+            <div className="space-y-6">
+              <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                Committee Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="md:col-span-3">
+                  <label className="text-xs font-bold text-slate-500 mb-2 block">Committee Name <span className="text-red-500">*</span></label>
+                  <input required name="committeeName" value={formData.committeeName} onChange={hC} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium" placeholder="Enter committee name..." />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 mb-2 block">Year <span className="text-red-500">*</span></label>
+                  <input required name="year" type="number" value={formData.year} onChange={hC} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none transition-all font-medium" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-xs font-bold text-slate-500 mb-2 block">Organization Name <span className="text-red-500">*</span></label>
+                  <input required name="organization.name" value={formData.organization.name} onChange={hC} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none transition-all font-medium" placeholder="Organization name..." />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 mb-2 block">Level <span className="text-red-500">*</span></label>
+                  <select name="level" value={formData.level} onChange={hC} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none transition-all font-medium">
+                    <option value="Local">Local</option>
+                    <option value="National">National</option>
+                    <option value="International">International</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 mb-2 block">Committee Type <span className="text-red-500">*</span></label>
+                  <select name="committeeType" value={formData.committeeType} onChange={hC} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none transition-all font-medium">
+                    <option value="Academic">Academic</option>
+                    <option value="Research">Research</option>
+                    <option value="Administrative">Administrative</option>
+                    <option value="Technical">Technical</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 mb-2 block">Position <span className="text-red-500">*</span></label>
+                  <select name="position" value={formData.position} onChange={hC} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none transition-all font-medium">
+                    <option value="Chairperson">Chairperson</option>
+                    <option value="Member">Member</option>
+                    <option value="Coordinator">Coordinator</option>
+                    <option value="Secretary">Secretary</option>
+                    <option value="Advisor">Advisor</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div className="p-8 border-t border-slate-100 bg-slate-50/50 rounded-b-3xl flex justify-end gap-4 shrink-0">
+          <button type="button" onClick={onClose} disabled={loading} className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 bg-white border border-slate-200 shadow-sm rounded-2xl transition-all">
+            Cancel
+          </button>
+          <button type="submit" form="committeeForm" disabled={loading} className="px-8 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 rounded-2xl transition-all active:scale-95 min-w-[180px]">
+            {loading ? "Saving..." : initialData ? "Update Membership" : "Save Membership"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

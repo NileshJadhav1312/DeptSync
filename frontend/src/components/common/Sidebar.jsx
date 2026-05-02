@@ -29,6 +29,8 @@ export default function Sidebar({ role, open, onClose, onLogout }) {
 
   const designations = profile?.designations || user?.designations || [];
   const isSDWCoordinator = designations.includes("SDW Coordinator");
+  const isResearchCoordinator = designations.includes("Research Coordinator");
+  const isProjectCoordinator = designations.includes("Project Coordinator");
   const isClassTeacher = designations.includes("Class Teacher") || hasClassrooms;
 
   console.log("Current user in Sidebar:", user);
@@ -39,22 +41,20 @@ export default function Sidebar({ role, open, onClose, onLogout }) {
     { label: "Dashboard", to: "/admin" },
     { label: "Departments", to: "/admin/departments" },
     { label: "Teachers", to: "/admin/teachers" },
-    { label: "Activities", to: "/admin/activities" },
     { label: "Students", to: "/admin/students" },
-    { label: "Reports", to: "/admin/reports" },
-     
   ];
 
   const baseTeacherLinks = [
     { label: "Dashboard", to: "/teacher" },
     ...(isClassTeacher ? [{ label: "Classroom", to: "/teacher/classroom" }] : []),
     ...(isSDWCoordinator ? [{ label: "SDW Approvals", to: "/teacher/sdw-approvals" }] : []),
+    ...(isResearchCoordinator ? [{ label: "Research Approvals", to: "/teacher/research-approvals" }] : []),
+    ...(isProjectCoordinator ? [{ label: "Project Approvals", to: "/teacher/project-approvals" }] : []),
   ];
 
   const moreTeacherLinks = [
     { label: "Activities", to: "/teacher/activities" },
     { label: "Achievements", to: "/teacher/achievements" },
-    { label: "Research Papers", to: "/teacher/research-papers" },
     { label: "Journal Publications", to: "/teacher/journal-publications" },
     { label: "Book Publications", to: "/teacher/book-publications" },
     { label: "Grants", to: "/teacher/grants" },
@@ -65,6 +65,7 @@ export default function Sidebar({ role, open, onClose, onLogout }) {
     { label: "Book Chapters", to: "/teacher/book-chapters" },
     { label: "Patents", to: "/teacher/patents" },
     { label: "Copyrights", to: "/teacher/copyrights" },
+    { label: "Projects", to: "/teacher/projects" },
   ];
 
   const teacherLinks = baseTeacherLinks; // Handled separately in render
@@ -73,7 +74,13 @@ export default function Sidebar({ role, open, onClose, onLogout }) {
     { label: "Dashboard", to: "/student" },
     { label: "Academics", to: "/student/academics" },
     { label: "Achievements", to: "/student/achievements" },
+    { label: "Journal Publications", to: "/student/journals" },
     { label: "Conferences", to: "/student/conferences" },
+    { label: "Patents", to: "/student/patents" },
+    { label: "Copyrights", to: "/student/copyrights" },
+    { label: "Grants", to: "/student/grants" },
+    { label: "Consultancies", to: "/student/consultancies" },
+    { label: "Projects", to: "/student/projects" },
   ];
 
   const links = role === "admin" ? adminLinks : role === "teacher" ? teacherLinks : studentLinks;

@@ -13,12 +13,12 @@ const consultancySchema = new mongoose.Schema(
     teacherId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Teacher",
-      required: true,
+      required: function() { return this.createdByModel === 'Teacher'; },
       index: true
     },
     teacherName: {
       type: String,
-      required: true
+      required: function() { return this.createdByModel === 'Teacher'; }
     },
     departmentId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -28,6 +28,14 @@ const consultancySchema = new mongoose.Schema(
     departmentName: {
       type: String,
       required: true
+    },
+    studentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Student",
+      index: true
+    },
+    studentName: {
+      type: String
     },
 
     // Consultancy Details
@@ -132,15 +140,35 @@ const consultancySchema = new mongoose.Schema(
 
     tags: [String],
 
-    // System Fields
-    createdBy: {
+    // Owner info — teacher or student
+    createdByModel: {
+      type: String,
+      enum: ["Teacher", "Student"],
+      required: true,
+      default: "Teacher"
+    },
+    createdById: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Teacher"
+      refPath: "createdByModel",
+      required: true
+    },
+    createdByName: {
+      type: String,
+      required: true
     },
 
-    updatedBy: {
+    // Approval Fields
+    approvalStatus: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected"],
+      default: "Pending",
+    },
+    approvedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Teacher"
+      ref: "Teacher",
+    },
+    coordinatorComment: {
+      type: String,
     },
 
     isActive: {

@@ -57,14 +57,16 @@ async function createEditorialBoard(req, res) {
 async function getAllEditorialBoards(req, res) {
   try {
     const { teacherId, departmentId, academicYear, level } = req.query;
-    let query = { isActive: true };
+    let query = { isActive: { $ne: false } };
 
     if (teacherId) query.teacherId = teacherId;
     if (departmentId) query.departmentId = departmentId;
     if (academicYear) query.academicYear = academicYear;
     if (level) query.level = level;
 
-    const editorialBoards = await EditorialBoard.find(query).sort({ academicYear: -1 });
+    const editorialBoards = await EditorialBoard.find(query)
+      .populate("teacherId", "employeeId")
+      .sort({ academicYear: -1 });
     return res.status(200).json({ editorialBoards });
   } catch (error) {
     console.error("getAllEditorialBoards error", error);

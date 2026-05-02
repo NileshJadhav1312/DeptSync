@@ -57,28 +57,51 @@ const journalPublicationSchema = new mongoose.Schema({
   cashIncentiveAmount: Number,
   vchBillNo: String,
   articleUrl: String,
+  scopusLink: String,
+  googleScholarLink: String,
 
-  // Teacher & Department Info
+  // Owner info — teacher or student
+  createdByModel: {
+    type: String,
+    enum: ["Teacher", "Student"],
+    default: "Teacher"
+  },
+  createdById: {
+    type: mongoose.Schema.Types.ObjectId,
+    refPath: "createdByModel"
+  },
+  createdByName: { type: String },
+  // Legacy teacher fields
   teacherId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Teacher",
-    required: true
+    ref: "Teacher"
   },
-  teacherName: {
-    type: String,
-    required: true
+  teacherName: { type: String },
+  // Student fields
+  studentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Student"
   },
+  studentName: { type: String },
   departmentId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Department",
-    required: true
+    ref: "Department"
   },
-  departmentName: {
-    type: String,
-    required: true
-  },
+  departmentName: { type: String },
 
-  isActive: {
+      approvalStatus: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected"],
+      default: "Pending",
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Teacher",
+    },
+    coordinatorComment: {
+      type: String,
+    },
+    isActive: {
     type: Boolean,
     default: true
   }
@@ -87,3 +110,4 @@ const journalPublicationSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("JournalPublication", journalPublicationSchema);
+

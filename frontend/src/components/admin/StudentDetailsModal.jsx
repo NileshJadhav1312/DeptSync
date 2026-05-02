@@ -105,29 +105,30 @@ export default function StudentDetailsModal({ isOpen, onClose, student }) {
           </div>
 
           {/* Contributions Breakdown */}
-          <div className="mt-6 pt-8 border-t border-slate-100">
-            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-[0.2em] mb-6">Contributions Breakdown</h3>
+           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                     {[
+                        { label: "Activities", count: student.counts?.activities, color: "bg-blue-50 text-blue-700 border-blue-100" },
+                        { label: "Grants", count: student.counts?.grants, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+                        { label: "Journals", count: student.counts?.journals, color: "bg-indigo-50 text-indigo-700 border-indigo-100" },
+                        { label: "Books", count: student.counts?.books, color: "bg-purple-50 text-purple-700 border-purple-100" },
+                        { label: "Chapters", count: student.counts?.chapters, color: "bg-orange-50 text-orange-700 border-orange-100" },
+                        { label: "Achievements", count: student.counts?.achievements, color: "bg-amber-50 text-amber-700 border-amber-100" },
+                        { label: "Consultancies", count: student.counts?.consultancies, color: "bg-teal-50 text-teal-700 border-teal-100" },
 
-            <div className="mt-4 p-2 pl-6 bg-slate-700 text-white rounded-2xl flex justify-between items-center shadow-xl">
-              <div>
+                        { label: "Patents", count: student.counts?.patents, color: "bg-purple-50 text-purple-700 border-purple-100" },
+                        { label: "Copyrights", count: student.counts?.copyrights, color: "bg-rose-50 text-rose-700 border-rose-100" },
+                        { label: "Conferences", count: student.counts?.conferences, color: "bg-orange-50 text-orange-700 border-orange-100" },
+                        { label: "Committees", count: student.counts?.committees, color: "bg-orange-50 text-orange-700 border-orange-100" },
 
-                <p className="text-lg font-bold">Total Contributions</p>
-              </div>
-              <div className="h-12 w-12 bg-white/10 rounded-xl flex items-center justify-center border border-white/20">
-                <span className="text-2xl font-black">{student.totalContributions || 0}</span>
-              </div>
-            </div><div className="grid grid-cols-2 gap-4">
-              <div className="p-6 rounded-2xl bg-amber-50 border border-amber-100 flex flex-col items-center justify-center text-center shadow-sm">
-                <p className="text-3xl font-black text-amber-700 leading-none">{student.counts?.achievements || 0}</p>
-                <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest mt-2">Achievements</p>
-              </div>
-              <div className="p-6 rounded-2xl bg-blue-50 border border-blue-100 flex flex-col items-center justify-center text-center shadow-sm">
-                <p className="text-3xl font-black text-blue-700 leading-none">{student.counts?.activities || 0}</p>
-                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-2">Activities</p>
-              </div>
-            </div>
-
-          </div>
+                        { label: "Editorial", count: student.counts?.editorial, color: "bg-rose-50 text-rose-700 border-rose-100" },
+                         
+                     ].map((item, idx) => (
+                        <div key={idx} className={`p-4 rounded-2xl border ${item.color} shadow-sm flex flex-col items-center justify-center text-center`} style={{ animationDelay: `${idx * 50}ms` }}>
+                           <p className="text-2xl font-black">{item.count || 0}</p>
+                           <p className="text-[10px] font-bold uppercase tracking-wider mt-1">{item.label}</p>
+                        </div>
+                     ))}
+                  </div>
         </div>
 
         {/* Footer */}

@@ -11,7 +11,9 @@ const DESIGNATION_OPTIONS = [
   "Junior Professor",
   "NAAC Coordinator",
   "Research Coordinator",
+  "Project Coordinator",
   "Class Teacher",
+  "Faculty development ",
   "Other",
 ];
 

@@ -5,7 +5,8 @@ const {
   getAllJournalPublications,
   getJournalPublicationById,
   updateJournalPublication,
-  deleteJournalPublication
+  deleteJournalPublication,
+  reviewJournalPublication,
 } = require("../controllers/journalPublication.controller");
 
 router.post("/", createJournalPublication);
@@ -14,4 +15,7 @@ router.get("/:id", getJournalPublicationById);
 router.put("/:id", updateJournalPublication);
 router.delete("/:id", deleteJournalPublication);
 
+router.put("/:id/review", reviewJournalPublication);
+
 module.exports = router;
+

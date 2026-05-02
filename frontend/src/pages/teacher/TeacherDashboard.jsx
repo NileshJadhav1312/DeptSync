@@ -1,25 +1,40 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+  useEffect, useMemo, useState
+} from "react";
+import {
+  useNavigate, useParams, useLocation
+} from "react-router-dom";
 import DashboardLayout from "../../components/common/DashboardLayout";
 import Card from "../../components/common/Card";
 import Table from "../../components/common/Table";
 import SectionCard from "../../components/common/SectionCard";
 import TextInput from "../../components/common/TextInput";
-import { useAuth } from "../../context/AuthContext";
-import { getTeacherProfile } from "../../services/profile";
-import { getActivities, createActivity, updateActivity, deleteActivity } from "../../services/activity";
-import { getAchievements, createAchievement, updateAchievement, deleteAchievement, getDepartmentAchievements, reviewAchievement } from "../../services/achievement";
-import { getTeacherClassrooms, createClassroom, acceptStudent, rejectStudent, removeStudent, deleteClassroom } from "../../services/classroom";
+import {
+  useAuth
+} from "../../context/AuthContext";
+import {
+  getTeacherProfile
+} from "../../services/profile";
+import {
+  getActivities, createActivity, updateActivity, deleteActivity
+} from "../../services/activity";
+import {
+  getAchievements, createAchievement, updateAchievement, deleteAchievement, getDepartmentAchievements, reviewAchievement
+} from "../../services/achievement";
+import {
+  getTeacherClassrooms, createClassroom, acceptStudent, rejectStudent, removeStudent, deleteClassroom
+} from "../../services/classroom";
 import CreateClassroomModal from "../../components/teacher/CreateClassroomModal";
 import StudentDetailsModal from "../../components/teacher/StudentDetailsModal";
 import ActivityFormModal from "../../components/teacher/ActivityFormModal";
 import ActivitiesTable from "../../components/teacher/ActivitiesTable";
-import AchievementFormModal from "../../components/teacher/TeacherAchievementFormModal";
-import AchievementsTable from "../../components/teacher/TeacherAchievementsTable";
+import ApprovalsTable from "../../components/teacher/ApprovalsTable";
+import AchievementFormModal from "../../components/common/AchievementFormModal";
+import AchievementsTable from "../../components/common/AchievementsTable";
 
 // New Research Components
 import {
-  getResearchPapers, createResearchPaper, updateResearchPaper, deleteResearchPaper,
+  reviewJournalPublication, reviewPatent, reviewCopyright, reviewGrant, reviewProject,
   getBookPublications, createBookPublication, updateBookPublication, deleteBookPublication,
   getGrants, createGrant, updateGrant, deleteGrant,
   getConsultancies, createConsultancy, updateConsultancy, deleteConsultancy,
@@ -29,27 +44,38 @@ import {
   getConferencePublications, createConferencePublication, updateConferencePublication, deleteConferencePublication,
   getBookChapters, createBookChapter, updateBookChapter, deleteBookChapter,
   getPatents, createPatent, updatePatent, deletePatent,
-  getCopyrights, createCopyright, updateCopyright, deleteCopyright, reviewConferencePublication
+  getCopyrights, createCopyright, updateCopyright, deleteCopyright, reviewConferencePublication, reviewConsultancy
 } from "../../services/research";
 
-import ResearchPapersTable from "../../components/teacher/ResearchPapersTable";
-import ResearchPaperFormModal from "../../components/teacher/ResearchPaperFormModal";
 import BookPublicationsTable from "../../components/teacher/BookPublicationsTable";
 import BookPublicationFormModal from "../../components/teacher/BookPublicationFormModal";
-import { GrantsTable, GrantFormModal } from "../../components/teacher/GrantsItems";
-import { ConsultanciesTable, ConsultancyFormModal } from "../../components/teacher/ConsultancyItems";
-import { CommitteesTable, CommitteeFormModal } from "../../components/teacher/CommitteeItems";
-import { EditorialBoardsTable, EditorialBoardFormModal } from "../../components/teacher/EditorialBoardItems";
-import JournalPublicationsTable from "../../components/teacher/JournalPublicationsTable";
-import JournalPublicationFormModal from "../../components/teacher/JournalPublicationFormModal";
-import ConferencePublicationsTable from "../../components/teacher/ConferencePublicationsTable";
-import ConferencePublicationFormModal from "../../components/teacher/ConferencePublicationFormModal";
+import {
+  GrantsTable, GrantFormModal
+} from "../../components/common/GrantsItems";
+import {
+  ConsultanciesTable, ConsultancyFormModal
+} from "../../components/teacher/ConsultancyItems";
+import {
+  CommitteesTable, CommitteeFormModal
+} from "../../components/teacher/CommitteeItems";
+import {
+  EditorialBoardsTable, EditorialBoardFormModal
+} from "../../components/teacher/EditorialBoardItems";
+import JournalPublicationsTable from "../../components/common/JournalPublicationsTable";
+import JournalPublicationFormModal from "../../components/common/JournalPublicationFormModal";
+import ConferencePublicationsTable from "../../components/common/ConferencePublicationsTable";
+import ConferencePublicationFormModal from "../../components/common/ConferencePublicationFormModal";
 import BookChaptersTable from "../../components/teacher/BookChaptersTable";
 import BookChapterFormModal from "../../components/teacher/BookChapterFormModal";
-import PatentsTable from "../../components/teacher/PatentsTable";
-import PatentFormModal from "../../components/teacher/PatentFormModal";
-import CopyrightsTable from "../../components/teacher/CopyrightsTable";
-import CopyrightFormModal from "../../components/teacher/CopyrightFormModal";
+import PatentsTable from "../../components/common/PatentsTable";
+import PatentFormModal from "../../components/common/PatentFormModal";
+import CopyrightsTable from "../../components/common/CopyrightsTable";
+import CopyrightFormModal from "../../components/common/CopyrightFormModal";
+import ProjectsTable from "../../components/common/ProjectsTable";
+import ProjectFormModal from "../../components/common/ProjectFormModal";
+import {
+  getProjects, createProject, updateProject, deleteProject
+} from "../../services/research";
 
 export default function TeacherDashboard() {
   const { user, logout } = useAuth();
@@ -75,16 +101,12 @@ export default function TeacherDashboard() {
   const [departmentAchievements, setDepartmentAchievements] = useState([]);
   const [departmentConferences, setDepartmentConferences] = useState([]);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
-  const [reviewingAchievement, setReviewingAchievement] = useState(null);
-  const [reviewingConference, setReviewingConference] = useState(null);
+  const [reviewingItem, setReviewingItem] = useState(null);
+  const [reviewingType, setReviewingType] = useState(null);
   const [reviewComment, setReviewComment] = useState("");
   const [reviewStatus, setReviewStatus] = useState("Approved");
 
   // Research Modules States
-  const [researchPapers, setResearchPapers] = useState([]);
-  const [isPaperModalOpen, setIsPaperModalOpen] = useState(false);
-  const [editingPaper, setEditingPaper] = useState(null);
-
   const [bookPublications, setBookPublications] = useState([]);
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
@@ -102,6 +124,13 @@ export default function TeacherDashboard() {
   const [editingCommittee, setEditingCommittee] = useState(null);
 
   const [editorialBoards, setEditorialBoards] = useState([]);
+  const [researchJournals, setResearchJournals] = useState([]);
+  const [researchPatents, setResearchPatents] = useState([]);
+  const [researchCopyrights, setResearchCopyrights] = useState([]);
+  const [researchGrants, setResearchGrants] = useState([]);
+  const [researchConsultancies, setResearchConsultancies] = useState([]);
+  const [researchConferences, setResearchConferences] = useState([]);
+  const [projectProjects, setProjectProjects] = useState([]);
   const [isEditorialModalOpen, setIsEditorialModalOpen] = useState(false);
   const [editingEditorial, setEditingEditorial] = useState(null);
 
@@ -117,20 +146,15 @@ export default function TeacherDashboard() {
   const [isChapterModalOpen, setIsChapterModalOpen] = useState(false);
   const [editingChapter, setEditingChapter] = useState(null);
 
-  const [patents, setPatents] = useState([]);
-  const [isPatentModalOpen, setIsPatentModalOpen] = useState(false);
-  const [editingPatent, setEditingPatent] = useState(null);
-
-  const [copyrights, setCopyrights] = useState([]);
-  const [isCopyrightModalOpen, setIsCopyrightModalOpen] = useState(false);
-  const [editingCopyright, setEditingCopyright] = useState(null);
-
   const isActivities = section === "activities";
   const isAchievements = section === "achievements";
   const isClassroom = section === "classroom";
   const isSDWApprovals = section === "sdw-approvals";
+  const isResearchApprovals = section === "research-approvals";
+  const isProjectApprovals = section === "project-approvals";
+  const isResearchCoordinator = profileData?.designations?.includes("Research Coordinator");
+  const isProjectCoordinator = profileData?.designations?.includes("Project Coordinator");
 
-  const isResearchPapers = section === "research-papers";
   const isBookPublications = section === "book-publications";
   const isGrants = section === "grants";
   const isConsultancies = section === "consultancies";
@@ -141,12 +165,34 @@ export default function TeacherDashboard() {
   const isBookChapters = section === "book-chapters";
   const isPatents = section === "patents";
   const isCopyrights = section === "copyrights";
+  const isProjects = section === "projects";
+
+  const isClassTeacher = profileData?.designations?.includes("Class Teacher");
+  const isSDWCoordinator = profileData?.designations?.includes("SDW Coordinator");
+
+  const [patents, setPatents] = useState([]);
+  const [isPatentModalOpen, setIsPatentModalOpen] = useState(false);
+  const [editingPatent, setEditingPatent] = useState(null);
+
+  const [copyrights, setCopyrights] = useState([]);
+  const [isCopyrightModalOpen, setIsCopyrightModalOpen] = useState(false);
+  const [editingCopyright, setEditingCopyright] = useState(null);
+
+  const [projects, setProjects] = useState([]);
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
+  const location = useLocation();
+  const navState = location.state || {};
+  const [sdwFilter, setSdwFilter] = useState("Pending");
+  const [researchFilter, setResearchFilter] = useState("Pending");
+  const [projectFilter, setProjectFilter] = useState("Pending");
+
+
 
   const sortedClassrooms = useMemo(() => {
     return [...classrooms].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   }, [classrooms]);
-  const isClassTeacher = profileData?.designations?.includes("Class Teacher");
-  const isSDWCoordinator = profileData?.designations?.includes("SDW Coordinator");
+
 
   useEffect(() => {
     if (user?.id) {
@@ -160,7 +206,6 @@ export default function TeacherDashboard() {
   }, [user?.id]);
 
   const fetchAllResearchData = () => {
-    fetchResearchPapers();
     fetchBookPublications();
     fetchGrants();
     fetchConsultancies();
@@ -171,6 +216,7 @@ export default function TeacherDashboard() {
     fetchBookChapters();
     fetchPatents();
     fetchCopyrights();
+    fetchProjects();
   };
 
   useEffect(() => {
@@ -190,6 +236,47 @@ export default function TeacherDashboard() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  useEffect(() => {
+    if (isResearchApprovals && isResearchCoordinator && profileData?.departmentId) {
+      fetchResearchApprovals();
+    }
+  }, [isResearchApprovals, isResearchCoordinator, profileData?.departmentId]);
+
+  useEffect(() => {
+    if (isProjectApprovals && isProjectCoordinator && profileData?.departmentId) {
+      fetchProjectApprovals();
+    }
+  }, [isProjectApprovals, isProjectCoordinator, profileData?.departmentId]);
+
+  const fetchResearchApprovals = async () => {
+    if (!profileData?.departmentId) return;
+    try {
+      const deptId = profileData.departmentId;
+      const [jRes, pRes, cRes, gRes, confRes, consRes] = await Promise.all([
+        getJournalPublications({ departmentId: deptId }),
+        getPatents({ departmentId: deptId }),
+        getCopyrights({ departmentId: deptId }),
+        getGrants({ departmentId: deptId }),
+        getConferencePublications({ departmentId: deptId }),
+        getConsultancies({ departmentId: deptId })
+      ]);
+      setResearchJournals((jRes.journalPublications || []).filter(i => i.createdByModel === "Student"));
+      setResearchPatents((pRes.patents || []).filter(i => i.createdByModel === "Student"));
+      setResearchCopyrights((cRes.copyrights || []).filter(i => i.createdByModel === "Student"));
+      setResearchGrants((gRes.grants || []).filter(i => i.createdByModel === "Student"));
+      setResearchConferences((confRes.conferencePublications || []).filter(i => i.createdByModel === "Student"));
+      setResearchConsultancies((consRes.consultancies || []).filter(i => i.createdByModel === "Student"));
+    } catch (err) { console.error(err); }
+  };
+
+  const fetchProjectApprovals = async () => {
+    if (!profileData?.departmentId) return;
+    try {
+      const res = await getProjects({ departmentId: profileData.departmentId });
+      setProjectProjects((res.projects || []).filter(i => i.createdByModel === "Student" || i.roleModel === "Student"));
+    } catch (err) { console.error(err); }
   };
 
   const fetchDepartmentConferences = async () => {
@@ -237,13 +324,6 @@ export default function TeacherDashboard() {
     } catch (err) {
       console.error("Failed to load classrooms.", err);
     }
-  };
-
-  const fetchResearchPapers = async () => {
-    try {
-      const response = await getResearchPapers({ teacherId: user.id });
-      setResearchPapers(response.researchPapers || []);
-    } catch (err) { console.error(err); }
   };
 
   const fetchBookPublications = async () => {
@@ -316,6 +396,13 @@ export default function TeacherDashboard() {
     } catch (err) { console.error(err); }
   };
 
+  const fetchProjects = async () => {
+    try {
+      const response = await getProjects({ userId: user.id, role: "teacher" });
+      setProjects(response.projects || []);
+    } catch (err) { console.error(err); }
+  };
+
   // Helper for adding teacher/dept info
   const withProfile = (payload) => ({
     ...payload,
@@ -324,15 +411,6 @@ export default function TeacherDashboard() {
     departmentId: profileData?.departmentId,
     departmentName: profileData?.departmentName,
   });
-
-  const handleCreatePaper = async (payload) => {
-    try {
-      if (editingPaper) await updateResearchPaper(editingPaper._id, payload);
-      else await createResearchPaper(withProfile(payload));
-      setEditingPaper(null);
-      fetchResearchPapers();
-    } catch (err) { console.error(err); }
-  };
 
   const handleCreateBook = async (payload) => {
     try {
@@ -375,6 +453,7 @@ export default function TeacherDashboard() {
       if (editingEditorial) await updateEditorialBoard(editingEditorial._id, payload);
       else await createEditorialBoard(withProfile(payload));
       setEditingEditorial(null);
+      setIsEditorialModalOpen(false);
       fetchEditorialBoards();
     } catch (err) { console.error(err); }
   };
@@ -384,6 +463,7 @@ export default function TeacherDashboard() {
       if (editingJournal) await updateJournalPublication(editingJournal._id, payload);
       else await createJournalPublication(withProfile(payload));
       setEditingJournal(null);
+      setIsJournalModalOpen(false);
       fetchJournalPublications();
     } catch (err) { console.error(err); }
   };
@@ -393,6 +473,7 @@ export default function TeacherDashboard() {
       if (editingConference) await updateConferencePublication(editingConference._id, payload);
       else await createConferencePublication(withProfile(payload));
       setEditingConference(null);
+      setIsConferenceModalOpen(false);
       fetchConferencePublications();
     } catch (err) { console.error(err); }
   };
@@ -402,6 +483,7 @@ export default function TeacherDashboard() {
       if (editingChapter) await updateBookChapter(editingChapter._id, payload);
       else await createBookChapter(withProfile(payload));
       setEditingChapter(null);
+      setIsBookChapterModalOpen(false);
       fetchBookChapters();
     } catch (err) { console.error(err); }
   };
@@ -411,6 +493,7 @@ export default function TeacherDashboard() {
       if (editingPatent) await updatePatent(editingPatent._id, payload);
       else await createPatent(withProfile(payload));
       setEditingPatent(null);
+      setIsPatentModalOpen(false);
       fetchPatents();
     } catch (err) { console.error(err); }
   };
@@ -420,11 +503,28 @@ export default function TeacherDashboard() {
       if (editingCopyright) await updateCopyright(editingCopyright._id, payload);
       else await createCopyright(withProfile(payload));
       setEditingCopyright(null);
+      setIsCopyrightModalOpen(false);
       fetchCopyrights();
     } catch (err) { console.error(err); }
   };
 
-  const handleDeletePaper = async (item) => { if (window.confirm("Delete?")) { await deleteResearchPaper(item._id); fetchResearchPapers(); } };
+  const handleCreateProject = async (payload) => {
+    try {
+      const projectPayload = {
+        ...payload,
+        userId: user.id,
+        roleModel: "Teacher",
+        departmentId: profileData?.departmentId,
+        departmentName: profileData?.departmentName,
+      };
+      if (editingProject) await updateProject(editingProject._id, projectPayload);
+      else await createProject(projectPayload);
+      setEditingProject(null);
+      setIsProjectModalOpen(false);
+      fetchProjects();
+    } catch (err) { console.error(err); }
+  };
+
   const handleDeleteBook = async (item) => { if (window.confirm("Delete?")) { await deleteBookPublication(item._id); fetchBookPublications(); } };
   const handleDeleteGrant = async (item) => { if (window.confirm("Delete?")) { await deleteGrant(item._id); fetchGrants(); } };
   const handleDeleteConsultancy = async (item) => { if (window.confirm("Delete?")) { await deleteConsultancy(item._id); fetchConsultancies(); } };
@@ -445,6 +545,12 @@ export default function TeacherDashboard() {
   const handleDeleteCopyright = async (id) => {
     if (window.confirm("Delete this copyright?")) {
       await deleteCopyright(id); fetchCopyrights();
+    }
+  };
+
+  const handleDeleteProject = async (id) => {
+    if (window.confirm("Delete this project?")) {
+      await deleteProject(id); fetchProjects();
     }
   };
 
@@ -589,24 +695,41 @@ export default function TeacherDashboard() {
 
   const submitReview = async () => {
     try {
-      if (reviewingAchievement) {
-        await reviewAchievement(reviewingAchievement._id, {
-          approvalStatus: reviewStatus,
-          coordinatorComment: reviewComment,
-          approvedBy: user.id
-        });
+      const reviewPayload = {
+        approvalStatus: reviewStatus,
+        coordinatorComment: reviewComment,
+        approvedBy: user.id
+      };
+
+      if (reviewingType === 'Achievement') {
+        await reviewAchievement(reviewingItem._id, reviewPayload);
         fetchDepartmentAchievements();
-      } else if (reviewingConference) {
-        await reviewConferencePublication(reviewingConference._id, {
-          approvalStatus: reviewStatus,
-          coordinatorComment: reviewComment,
-          approvedBy: user.id
-        });
-        fetchDepartmentConferences();
+      } else if (reviewingType === 'Conference') {
+        await reviewConferencePublication(reviewingItem._id, reviewPayload);
+        fetchResearchApprovals();
+      } else if (reviewingType === 'Journal') {
+        await reviewJournalPublication(reviewingItem._id, reviewPayload);
+        fetchResearchApprovals();
+      } else if (reviewingType === 'Patent') {
+        await reviewPatent(reviewingItem._id, reviewPayload);
+        fetchResearchApprovals();
+      } else if (reviewingType === 'Copyright') {
+        await reviewCopyright(reviewingItem._id, reviewPayload);
+        fetchResearchApprovals();
+      } else if (reviewingType === 'Grant') {
+        await reviewGrant(reviewingItem._id, reviewPayload);
+        fetchResearchApprovals();
+      } else if (reviewingType === 'Consultancy') {
+        await reviewConsultancy(reviewingItem._id, reviewPayload);
+        fetchResearchApprovals();
+      } else if (reviewingType === 'Project') {
+        await reviewProject(reviewingItem._id, reviewPayload);
+        fetchProjectApprovals();
       }
+
       setReviewModalOpen(false);
-      setReviewingAchievement(null);
-      setReviewingConference(null);
+      setReviewingItem(null);
+      setReviewingType(null);
       setReviewComment("");
     } catch (err) {
       console.error(err);
@@ -615,43 +738,80 @@ export default function TeacherDashboard() {
   }
 
   const openReviewModal = (item, type) => {
-    if (type === "achievement") {
-      setReviewingAchievement(item);
-      setReviewingConference(null);
-    } else {
-      setReviewingConference(item);
-      setReviewingAchievement(null);
-    }
+    setReviewingItem(item);
+    setReviewingType(type);
     setReviewStatus(item.approvalStatus === "Pending" ? "Approved" : item.approvalStatus);
     setReviewComment(item.coordinatorComment || "");
     setReviewModalOpen(true);
-  }
+  };
 
-  const unifiedRequests = useMemo(() => {
-    const achs = departmentAchievements.map(a => ({
+  const sdwRequests = useMemo(() => {
+    return departmentAchievements.map(a => ({
       ...a,
-      _type: "Achievement",
+      _type: 'Achievement',
       _studentName: a.achievedByName,
       _title: a.name,
       _date: a.date,
-      _level: a.level,
-      _prn: a.achievedBy?.prnNumber || a.prnNumber || "N/A",
-      _class: a.achievedBy?.className || a.className || "N/A",
-    }));
+      _prnNumber: a.achievedBy?.prnNumber || a.prnNumber || 'N/A',
+      _class: a.achievedBy?.className || a.achievedBy?.class || a.className || a.cclass || 'N/A',
+      _email: a.achievedBy?.email || 'N/A',
+      semester: a.semester || a.achievedBy?.semester
+    })).sort((a, b) => new Date(b._date) - new Date(a._date));
+  }, [departmentAchievements]);
+  const researchRequests = useMemo(() => {
+    const items = [
+      ...researchJournals.map(i => ({ ...i, _type: 'Journal', _title: i.paperTitle, _date: i.createdAt })),
+      ...researchPatents.map(i => ({ ...i, _type: 'Patent', _title: i.titleOfPatent, _date: i.createdAt })),
+      ...researchCopyrights.map(i => ({ ...i, _type: 'Copyright', _title: i.workTitle, _date: i.createdAt })),
+      ...researchGrants.map(i => ({ ...i, _type: 'Grant', _title: i.projectTitle, _date: i.createdAt })),
+      ...researchConsultancies.map(i => ({ ...i, _type: 'Consultancy', _title: i.title, _date: i.createdAt })),
+      ...researchConferences.map(i => ({ ...i, _type: 'Conference', _title: i.researchPaperTitle, _date: i.conferenceDate }))
+    ];
+    return items.map(i => ({
+      ...i,
+      _studentName: i.studentName || i.createdByName || 'N/A',
+      _prnNumber: i.studentId?.prnNumber || i.prnNumber || i.identificationNumber || 'N/A',
+      _class: i.studentId?.className || i.studentId?.class || i.className || i.cclass || 'N/A',
+      _email: i.studentId?.email || 'N/A',
+      _title: i.paperTitle || i.titleOfPatent || i.titleOfCopyright || i.workTitle || i.projectTitle || i.researchPaperTitle || i.title || i.name || 'Untitled',
+      semester: i.semester || i.studentId?.semester
+    })).sort((a, b) => new Date(b._date) - new Date(a._date));
+  }, [researchJournals, researchPatents, researchCopyrights, researchGrants, researchConferences]);
 
-    const confs = departmentConferences.map(c => ({
-      ...c,
-      _type: "Conference",
-      _studentName: c.studentName,
-      _title: c.researchPaperTitle,
-      _date: c.conferenceDate,
-      _level: c.conferenceLevel,
-      _prn: c.studentId?.prnNumber || "N/A",
-      _class: c.studentId?.className || "N/A"
-    }));
+  const projectRequests = useMemo(() => {
+    return projectProjects.map(i => ({
+      ...i,
+      _type: 'Project',
+      _title: i.title,
+      _date: i.createdAt,
+      _studentName: i.name || i.createdByName || 'N/A',
+      _prnNumber: i.userId?.prnNumber || i.identificationNumber || i.prnNumber || 'N/A',
+      _class: i.userId?.className || i.userId?.class || i.cclass || i.className || 'N/A',
+      _email: i.userId?.email || 'N/A',
+      _title: i.title || i.paperTitle || i.name || 'Untitled',
+      semester: i.semester || i.userId?.semester
+    })).sort((a, b) => new Date(b._date) - new Date(a._date));
+  }, [projectProjects]);
 
-    return [...achs, ...confs].sort((a, b) => new Date(b._date) - new Date(a._date));
-  }, [departmentAchievements, departmentConferences]);
+  const pendingResearchCount = useMemo(() => {
+    return researchRequests.filter(r => r.approvalStatus === "Pending").length;
+  }, [researchRequests]);
+
+  const pendingSdwCount = useMemo(() => {
+    return sdwRequests.filter(r => r.approvalStatus === "Pending").length;
+  }, [sdwRequests]);
+
+  const pendingProjectCount = useMemo(() => {
+    return projectRequests.filter(r => r.approvalStatus === "Pending").length;
+  }, [projectRequests]);
+
+  const approvedProjectCount = useMemo(() => {
+    return projectRequests.filter(r => r.approvalStatus === "Approved").length;
+  }, [projectRequests]);
+
+  const rejectedProjectCount = useMemo(() => {
+    return projectRequests.filter(r => r.approvalStatus === "Rejected").length;
+  }, [projectRequests]);
 
   const openEditModal = (activity) => {
     setEditingActivity(activity);
@@ -690,10 +850,11 @@ export default function TeacherDashboard() {
 
   const stats = [
     ...(isClassTeacher ? [{ title: "Class Achievements", value: "View", helper: "Track student progress", onClick: () => navigate("/teacher/classroom"), className: "cursor-pointer hover:shadow-lg hover:border-red-300 transition-all border-l-4 border-l-red-500 shadow-sm" }] : []),
-    ...(isSDWCoordinator ? [{ title: "SDW Approvals", value: departmentAchievements.length, helper: "Pending reviews", onClick: () => navigate("/teacher/sdw-approvals"), className: "cursor-pointer hover:shadow-lg hover:border-pink-300 transition-all border-l-4 border-pink-500 shadow-sm" }] : []),
+    ...(isSDWCoordinator ? [{ title: "SDW Approvals", value: pendingSdwCount, helper: "Pending reviews", onClick: () => navigate("/teacher/sdw-approvals"), className: "cursor-pointer hover:shadow-lg hover:border-pink-300 transition-all border-l-4 border-pink-500 shadow-sm" }] : []),
+    ...(isResearchCoordinator ? [{ title: "Research Approvals", value: pendingResearchCount, helper: "Pending reviews", onClick: () => navigate("/teacher/research-approvals"), className: "cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all border-l-4 border-indigo-500 shadow-sm" }] : []),
+    ...(isProjectCoordinator ? [{ title: "Project Approvals", value: pendingProjectCount, helper: "Pending reviews", onClick: () => navigate("/teacher/project-approvals"), className: "cursor-pointer hover:shadow-lg hover:border-cyan-300 transition-all border-l-4 border-cyan-500 shadow-sm" }] : []),
     { title: "Total Activities", value: myActivities.length, helper: "Departmental Activities", onClick: () => navigate("/teacher/activities"), className: "cursor-pointer hover:shadow-lg hover:border-slate-300 transition-all border-l-4 border-l-slate-500 shadow-sm" },
     { title: "Total Achievements", value: myAchievements.length, helper: "Personal Scholarly Gains", onClick: () => navigate("/teacher/achievements"), className: "cursor-pointer hover:shadow-lg hover:border-amber-300 transition-all border-l-4 border-l-amber-500 shadow-sm" },
-    { title: "Research Papers", value: researchPapers.length, helper: "Published/Accepted", onClick: () => navigate("/teacher/research-papers"), className: "cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all border-l-4 border-l-indigo-500 shadow-sm" },
     { title: "Book Publications", value: bookPublications.length, helper: "Academic Books", onClick: () => navigate("/teacher/book-publications"), className: "cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all border-l-4 border-l-blue-500 shadow-sm" },
     { title: "Grants & Projects", value: grants.length, helper: "Research Funding", onClick: () => navigate("/teacher/grants"), className: "cursor-pointer hover:shadow-lg hover:border-green-300 transition-all border-l-4 border-l-green-500 shadow-sm" },
     { title: "Consultancies", value: consultancies.length, helper: "Professional Projects", onClick: () => navigate("/teacher/consultancies"), className: "cursor-pointer hover:shadow-lg hover:border-teal-300 transition-all border-l-4 border-l-teal-500 shadow-sm" },
@@ -704,6 +865,7 @@ export default function TeacherDashboard() {
     { title: "Book Chapters", value: bookChapters.length, helper: "Chapter Publications", onClick: () => navigate("/teacher/book-chapters"), className: "cursor-pointer hover:shadow-lg hover:border-teal-300 transition-all border-l-4 border-l-teal-500 shadow-sm" },
     { title: "Patents", value: patents.length, helper: "Registered Patents", onClick: () => navigate("/teacher/patents"), className: "cursor-pointer hover:shadow-lg hover:border-yellow-300 transition-all border-l-4 border-l-yellow-500 shadow-sm" },
     { title: "Copyrights", value: copyrights.length, helper: "Registered Copyrights", onClick: () => navigate("/teacher/copyrights"), className: "cursor-pointer hover:shadow-lg hover:border-orange-300 transition-all border-l-4 border-l-orange-500 shadow-sm" },
+    { title: "Projects", value: projects.length, helper: "Academic/Research Projects", onClick: () => navigate("/teacher/projects"), className: "cursor-pointer hover:shadow-lg hover:border-cyan-300 transition-all border-l-4 border-l-cyan-500 shadow-sm" },
   ];
 
   return (
@@ -714,17 +876,17 @@ export default function TeacherDashboard() {
           isAchievements ? "Manage Achievements" :
             isClassroom ? "Classroom Management" :
               isSDWApprovals ? "SDW Approvals" :
-                isResearchPapers ? "Research Papers" :
-                  isBookPublications ? "Book Publications" :
-                    isGrants ? "Research Grants" :
-                      isConsultancies ? "Consultancy Projects" :
-                        isCommittees ? "Committee Memberships" :
-                          isEditorialBoards ? "Editorial Boards" :
-                            isJournalPublications ? "Journal Details" :
-                              isConferencePublications ? "Conference Publications" :
-                                isBookChapters ? "Book Chapters" :
-                                  isPatents ? "Manage Patents" :
-                                    isCopyrights ? "Manage Copyrights" :
+                isBookPublications ? "Book Publications" :
+                  isGrants ? "Research Grants" :
+                    isConsultancies ? "Consultancy Projects" :
+                      isCommittees ? "Committee Memberships" :
+                        isEditorialBoards ? "Editorial Boards" :
+                          isJournalPublications ? "Journal Details" :
+                            isConferencePublications ? "Conference Publications" :
+                              isBookChapters ? "Book Chapters" :
+                                isPatents ? "Manage Patents" :
+                                  isCopyrights ? "Manage Copyrights" :
+                                    isProjects ? "Manage Projects" :
                                       "Teacher Dashboard"
       }
       subtitle={
@@ -739,8 +901,6 @@ export default function TeacherDashboard() {
           <button className="btn-primary bg-white text-black" onClick={() => { setEditingActivity(null); setIsActivityModalOpen(true) }}>Add Activity</button>
         ) : isAchievements ? (
           <button className="btn-primary bg-white text-black" onClick={() => { setEditingAchievement(null); setIsAchievementModalOpen(true) }}>Add Achievement</button>
-        ) : isResearchPapers ? (
-          <button className="btn-primary bg-white text-black" onClick={() => { setEditingPaper(null); setIsPaperModalOpen(true) }}>Add Paper</button>
         ) : isBookPublications ? (
           <button className="btn-primary bg-white text-black" onClick={() => { setEditingBook(null); setIsBookModalOpen(true) }}>Add Book</button>
         ) : isGrants ? (
@@ -761,6 +921,8 @@ export default function TeacherDashboard() {
           <button className="btn-primary bg-white text-black" onClick={() => { setEditingPatent(null); setIsPatentModalOpen(true) }}>Add Patent</button>
         ) : isCopyrights ? (
           <button className="btn-primary bg-white text-black" onClick={() => { setEditingCopyright(null); setIsCopyrightModalOpen(true) }}>Add Copyright</button>
+        ) : isProjects ? (
+          <button className="btn-primary bg-white text-black" onClick={() => { setEditingProject(null); setIsProjectModalOpen(true) }}>Add Project</button>
         ) : (isClassroom && isClassTeacher) ? (
           <button className="btn-primary bg-white text-black" onClick={() => setIsClassroomModalOpen(true)}>Create Classroom</button>
         ) : null
@@ -950,13 +1112,6 @@ export default function TeacherDashboard() {
         initialData={editingAchievement}
       />
 
-      <ResearchPaperFormModal
-        isOpen={isPaperModalOpen}
-        onClose={() => setIsPaperModalOpen(false)}
-        onSubmit={handleCreatePaper}
-        initialData={editingPaper}
-      />
-
       <BookPublicationFormModal
         isOpen={isBookModalOpen}
         onClose={() => setIsBookModalOpen(false)}
@@ -1010,6 +1165,7 @@ export default function TeacherDashboard() {
 
       <PatentFormModal isOpen={isPatentModalOpen} onClose={() => setIsPatentModalOpen(false)} onSubmit={(data) => { handleCreatePatent(data); setIsPatentModalOpen(false); }} initialData={editingPatent} />
       <CopyrightFormModal isOpen={isCopyrightModalOpen} onClose={() => setIsCopyrightModalOpen(false)} onSubmit={(data) => { handleCreateCopyright(data); setIsCopyrightModalOpen(false); }} initialData={editingCopyright} />
+      <ProjectFormModal isOpen={isProjectModalOpen} onClose={() => setIsProjectModalOpen(false)} onSubmit={handleCreateProject} project={editingProject} role="teacher" userProfile={profileData} />
 
       {!section && (
         <>
@@ -1053,9 +1209,6 @@ export default function TeacherDashboard() {
         />
       )}
 
-      {isResearchPapers && (
-        <ResearchPapersTable papers={researchPapers} onEdit={(p) => { setEditingPaper(p); setIsPaperModalOpen(true); }} onDelete={handleDeletePaper} />
-      )}
 
       {isBookPublications && (
         <BookPublicationsTable books={bookPublications} onEdit={(b) => { setEditingBook(b); setIsBookModalOpen(true); }} onDelete={handleDeleteBook} />
@@ -1106,6 +1259,13 @@ export default function TeacherDashboard() {
         </div>
       )}
 
+      {isProjects && (
+        <div className="card p-6 border-t-4 border-cyan-500">
+          <h3 className="font-bold text-lg mb-4 text-slate-800">Your Projects</h3>
+          <ProjectsTable projects={projects} onEdit={(p) => { setEditingProject(p); setIsProjectModalOpen(true); }} onDelete={handleDeleteProject} />
+        </div>
+      )}
+
       {isSDWApprovals && (
         <div className="space-y-6">
           {!isSDWCoordinator ? (
@@ -1114,117 +1274,166 @@ export default function TeacherDashboard() {
               <p className="text-sm mt-2">You are not assigned the 'SDW Coordinator' designation to review department achievements.</p>
             </div>
           ) : (
-            <>
-              {(reviewModalOpen && (reviewingAchievement || reviewingConference)) && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-                  <div className="card w-full max-w-lg shadow-2xl bg-white border border-slate-200 p-6 rounded-xl">
-                    <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-xl font-bold text-slate-900">Review Student {reviewingAchievement ? "Achievement" : "Conference"}</h2>
-                      <button onClick={() => { setReviewModalOpen(false); setReviewingAchievement(null); setReviewingConference(null); }} className="text-slate-400 hover:text-slate-600">✕</button>
-                    </div>
+            <ApprovalsTable
+              requests={sdwRequests}
+              onReview={openReviewModal}
+              title="SDW Approvals"
+              subtitle="Review student achievements and awards"
+              filter={sdwFilter}
+              setFilter={setSdwFilter}
+            />
+          )}
+        </div>
+      )}
 
-                    <div className="mb-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Student Name</p>
-                          <p className="text-sm font-bold text-slate-800">{reviewingAchievement ? reviewingAchievement.achievedByName : reviewingConference.studentName}</p>
-                        </div>
-                        {reviewingAchievement && reviewingAchievement.achievedBy && (
-                          <div className="text-right">
-                            <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">PRN / Class</p>
-                            <p className="text-xs font-bold text-indigo-600">{reviewingAchievement.achievedBy.prnNumber || "N/A"} | {reviewingAchievement.achievedBy.className || "N/A"}</p>
-                          </div>
-                        )}
-                        {reviewingConference && reviewingConference.studentId && (
-                          <div className="text-right">
-                            <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">PRN / Class</p>
-                            <p className="text-xs font-bold text-indigo-600">{reviewingConference.studentId.prnNumber || "N/A"} | {reviewingConference.studentId.className || "N/A"}</p>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mt-3">Title</p>
-                      <p className="text-lg font-bold text-slate-900 mt-0.5">{reviewingAchievement ? reviewingAchievement.name : reviewingConference.researchPaperTitle}</p>
-                      <div className="flex gap-2 mt-2">
-                        {reviewingAchievement && (
-                          <>
-                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[10px] font-bold uppercase">{reviewingAchievement.level}</span>
-                            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-bold uppercase">{reviewingAchievement.category}</span>
-                          </>
-                        )}
-                        {reviewingConference && (
-                          <>
-                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[10px] font-bold uppercase">{reviewingConference.conferenceLevel}</span>
-                            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-bold uppercase">{reviewingConference.conferenceName}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+      {isResearchApprovals && (
+        <div className="space-y-6">
+          {!isResearchCoordinator ? (
+            <div className="card p-8 text-center border-l-4 border-red-500 bg-red-50 text-red-700">
+              <h3 className="font-bold text-lg">No Access</h3>
+              <p className="text-sm mt-2">You are not assigned the 'Research Coordinator' designation to review department research works.</p>
+            </div>
+          ) : (
+            <ApprovalsTable
+              requests={researchRequests}
+              onReview={openReviewModal}
+              title="Research Approvals"
+              subtitle="Review Journals, Conferences, Patents, Copyrights, and Grants"
+              filter={researchFilter}
+              setFilter={setResearchFilter}
+            />
+          )}
+        </div>
+      )}
 
-                    <div className="space-y-4">
-                      <label className="block text-sm font-medium text-slate-700">
-                        Approval Status
-                        <select className="input mt-1 w-full" value={reviewStatus} onChange={(e) => setReviewStatus(e.target.value)}>
-                          <option value="Approved">Approved</option>
-                          <option value="Rejected">Rejected</option>
-                          <option value="Pending">Pending</option>
-                        </select>
-                      </label>
-                      <label className="block text-sm font-medium text-slate-700">
-                        Coordinator Comment (Visible to student)
-                        <textarea className="input mt-1 w-full h-24" placeholder="Enter feedback or praise..." value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} />
-                      </label>
-                    </div>
+      {isProjectApprovals && (
+        <div className="space-y-6">
+          {!isProjectCoordinator ? (
+            <div className="card p-8 text-center border-l-4 border-red-500 bg-red-50 text-red-700">
+              <h3 className="font-bold text-lg">No Access</h3>
+              <p className="text-sm mt-2">You are not assigned the 'Project Coordinator' designation to review department projects.</p>
+            </div>
+          ) : (
+            <ApprovalsTable
+              requests={projectRequests}
+              onReview={openReviewModal}
+              title="Project Approvals"
+              subtitle="Review students Projects"
+              filter={projectFilter}
+              setFilter={setProjectFilter}
+            />
+          )}
+        </div>
+      )}
 
-                    <div className="mt-6 flex gap-3 justify-end">
-                      <button className="btn-secondary" onClick={() => setReviewModalOpen(false)}>Cancel</button>
-                      <button className="btn-primary" onClick={submitReview}>Save Review</button>
-                    </div>
+      {(reviewModalOpen && reviewingItem) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => { setReviewModalOpen(false); setReviewingItem(null); setReviewingType(null); }} />
+          <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white rounded-t-3xl flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Review {reviewingType}</h2>
+                <p className="text-xs text-slate-500 mt-0.5"></p>
+              </div>
+              <button onClick={() => { setReviewModalOpen(false); setReviewingItem(null); setReviewingType(null); }} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 overflow-y-auto flex-1 scrollbar-thin space-y-8">
+              {/* Student Identification Section */}
+              <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-5 flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-lg uppercase shadow-lg shadow-indigo-100">
+                    {reviewingItem._studentName?.substring(0, 2)}
                   </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">{reviewingItem._studentName}</p>
+                    <p className="text-[11px] font-medium text-indigo-600 uppercase tracking-wider">{reviewingItem._prnNumber} • {reviewingItem._class} {reviewingItem.semester ? `• Sem ${reviewingItem.semester}` : ""}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5 font-medium">{reviewingItem._email}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Title Section */}
+              <div className="space-y-2">
+                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Submission Title</p>
+                <p className="text-xl font-black text-slate-900 leading-tight">{reviewingItem._title}</p>
+              </div>
+
+              {/* Submission Data Grid */}
+              <div className="grid grid-cols-2 gap-x-6 gap-y-5 pt-2 border-t border-slate-100">
+                {Object.entries(reviewingItem)
+                  .filter(([key]) => !['_id', '_studentName', '_prnNumber', '_class', '_email', '_title', '_date', '_type', 'studentId', 'userId', 'achievedBy', 'departmentId', 'createdBy', 'approvedBy', 'approvalStatus', 'coordinatorComment', 'isActive', 'createdAt', 'updatedAt', '__v', 'createdById', 'createdByName', 'createdByModel', 'semester', 'currentClassroom'].includes(key))
+                  .map(([key, value]) => (
+                    <div key={key}>
+                      <p className="text-[10px] text-slate-800 font-bold uppercase tracking-tight mb-1">
+                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                      </p>
+                      <p className="text-xs font-bold text-indigo-700 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100/50">
+                        {typeof value === 'boolean' ? (value ? 'Yes' : 'No') :
+                          (key.toLowerCase().includes('date') && value) ? new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) :
+                            (Array.isArray(value) ? value.join(', ') : (value?.toString() || 'N/A'))}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+
+              {/* Documents Section */}
+              {(reviewingItem.proofDocument || reviewingItem.supportingDocuments || reviewingItem.paymentProof) && (
+                <div className="pt-6 border-t border-slate-100">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase mb-3">Supporting Documentation</p>
+                  <a
+                    href={reviewingItem.proofDocument || reviewingItem.supportingDocuments || reviewingItem.paymentProof}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-between w-full p-4 bg-emerald-50 border border-emerald-100 rounded-2xl group hover:bg-emerald-100 transition-all shadow-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-600 text-white rounded-lg group-hover:scale-110 transition-transform">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      </div>
+                      <span className="text-xs font-bold text-emerald-800 uppercase tracking-wide">View Attached Supporting File</span>
+                    </div>
+                    <svg className="w-5 h-5 text-emerald-600 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                  </a>
                 </div>
               )}
 
-              <h3 className="font-bold text-lg text-slate-800 mt-8 mb-4"></h3>
-              <div className="overflow-x-auto card">
-                <table className="w-full text-left text-sm text-slate-600">
-                  <thead className="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-200">
-                    <tr>
-                      <th className="px-6 py-4 font-semibold">PRN</th>
-                      <th className="px-6 py-4 font-semibold">Student Name</th>
-                      <th className="px-6 py-4 font-semibold">Type</th>
-                      <th className="px-6 py-4 font-semibold">Title</th>
-                      <th className="px-6 py-4 font-semibold">Date</th>
-                      <th className="px-6 py-4 font-semibold">Status</th>
-                      <th className="px-6 py-4 font-semibold text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {unifiedRequests.length === 0 ? (
-                      <tr><td colSpan="7" className="px-6 py-8 text-center">No pending requests found for your department.</td></tr>
-                    ) : unifiedRequests.map((req, idx) => (
-                      <tr key={`${req._type}-${req._id || idx}`} className="hover:bg-slate-50/50 transition">
-                        <td className="px-6 py-4 font-medium text-slate-500">{req._prn}</td>
-                        <td className="px-6 py-4 font-bold text-slate-900">{req._studentName}</td>
-                        <td className="px-6 py-4 font-medium text-indigo-500 uppercase">{req._type}</td>
-                        <td className="px-6 py-4 text-slate-700 font-medium">{req._title}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{new Date(req._date).toLocaleDateString()}</td>
-                        <td className="px-6 py-4"  >
-                          <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${req.approvalStatus === 'Approved' ? 'bg-green-100 text-green-700' :
-                              req.approvalStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
-                                'bg-yellow-100 text-yellow-700'
-                            }`}>
-                            {req.approvalStatus}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <button onClick={() => openReviewModal(req, req._type === "Achievement" ? "achievement" : "conference")} className="text-sm font-semibold text-indigo-600 hover:text-indigo-800">Review</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              {/* Feedback Section */}
+              <div className="pt-6 border-t border-slate-100 space-y-4">
+                <p className="text-[10px] text-slate-400 font-bold uppercase">Decision & Feedback</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Approval Status</label>
+                    <select className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold text-xs" value={reviewStatus} onChange={(e) => setReviewStatus(e.target.value)}>
+                      <option value="Approved">Approved</option>
+                      <option value="Rejected">Rejected</option>
+                      <option value="Pending">Pending</option>
+                    </select>
+                  </div>
+                  <div className="col-span-2 space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Coordinator Comment (Visible to student)</label>
+                    <textarea className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl h-28 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium text-sm" placeholder="Explain the reason for rejection or provide praise for approval..." value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} />
+                  </div>
+                </div>
               </div>
-            </>
-          )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-4 shrink-0">
+              <button className="px-6 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all" onClick={() => { setReviewModalOpen(false); setReviewingItem(null); setReviewingType(null); }}>
+                Cancel
+              </button>
+              <button className="px-8 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 active:scale-95 transition-all" onClick={submitReview}>
+                Save Decision
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1339,3 +1548,10 @@ export default function TeacherDashboard() {
     </DashboardLayout>
   );
 }
+
+
+
+
+
+
+

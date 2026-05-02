@@ -6,7 +6,7 @@ router.post("/", controller.createConferencePublication);
 router.get("/", controller.getAllConferencePublications);
 router.get("/:id", controller.getConferencePublicationById);
 router.put("/:id", controller.updateConferencePublication);
-router.put("/review/:id", controller.reviewConferencePublication);
+router.put("/:id/review", controller.reviewConferencePublication);
 router.delete("/:id", controller.deleteConferencePublication);
 
 module.exports = router;

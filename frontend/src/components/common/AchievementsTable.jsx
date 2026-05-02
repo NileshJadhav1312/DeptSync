@@ -1,24 +1,24 @@
 import React, { useState } from "react";
-import TeacherAchievementDetailsModal from "./TeacherAchievementDetailsModal";
+import AchievementDetailsModal from "./AchievementDetailsModal";
 
-export default function TeacherAchievementsTable({ achievements, onEdit, onDelete }) {
+export default function AchievementsTable({ achievements, onEdit, onDelete }) {
   const [selectedAchievement, setSelectedAchievement] = useState(null);
 
   return (
-    <div className="card w-full overflow-hidden bg-white rounded-2xl border border-slate-200 shadow-sm mt-6">
-      <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+    <div className="card w-full overflow-hidden bg-white rounded-2xl border border-slate-400 shadow-sm mt-6">
+      <div className="p-5 border-b border-slate-400 flex items-center justify-between">
         <div>
           <h3 className="text-lg font-bold text-slate-900">Your Achievements</h3>
           <p className="text-sm text-slate-500 mt-1">Scholarly and professional recognitions</p>
         </div>
-        <div className="text-xs font-semibold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
+        <div className="text-xs font-semibold uppercase tracking-wider text-indigo-600 bg-indigo-200 px-3 py-1.5 rounded-lg border border-indigo-400">
           Total: {achievements.length}
         </div>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-200">
+          <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-400">
             <tr>
               <th className="px-6 py-4 font-semibold">Achievement Name</th>
               <th className="px-6 py-4 font-semibold">Date</th>
@@ -66,7 +66,7 @@ export default function TeacherAchievementsTable({ achievements, onEdit, onDelet
           </tbody>
         </table>
       </div>
-      <TeacherAchievementDetailsModal
+      <AchievementDetailsModal
         isOpen={!!selectedAchievement}
         onClose={() => setSelectedAchievement(null)}
         achievement={selectedAchievement}
@@ -74,3 +74,4 @@ export default function TeacherAchievementsTable({ achievements, onEdit, onDelet
     </div>
   );
 }
+

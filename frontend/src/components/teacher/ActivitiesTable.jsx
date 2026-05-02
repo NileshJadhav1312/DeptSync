@@ -5,20 +5,20 @@ export default function ActivitiesTable({ activities, onEdit, onDelete }) {
   const [selectedActivity, setSelectedActivity] = useState(null);
 
   return (
-    <div className="card w-full overflow-hidden bg-white rounded-2xl border border-slate-200 shadow-sm mt-6">
-      <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+    <div className="card w-full overflow-hidden bg-white rounded-2xl border border-slate-400 shadow-sm mt-6">
+      <div className="p-5 border-b border-slate-400 flex items-center justify-between">
         <div>
           <h3 className="text-lg font-bold text-slate-900">Activities Overview</h3>
           <p className="text-sm text-slate-500 mt-1">Organised and attended departmental activities</p>
         </div>
-        <div className="text-xs font-semibold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
+        <div className="text-xs font-semibold uppercase tracking-wider text-indigo-600 bg-indigo-200 px-3 py-1.5 rounded-lg border border-indigo-400">
           Total: {activities.length}
         </div>
       </div>
 
       <div className="overflow-auto max-h-[600px] scrollbar-thin">
         <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 sticky top-0 z-20">
+          <thead className="bg-slate-200 text-slate-500 border-b border-slate-400 sticky top-0 z-20">
             <tr>
               <th className="px-6 py-4 font-semibold">Activity Name</th>
               <th className="px-6 py-4 font-semibold">Academic Year</th>
@@ -29,7 +29,7 @@ export default function ActivitiesTable({ activities, onEdit, onDelete }) {
               <th className="px-6 py-4 font-semibold text-center">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-slate-700">
+          <tbody className="divide-y divide-slate-100 text-slate-700 border-b border-slate-300">
             {activities.length === 0 ? (
               <tr>
                 <td colSpan="7" className="px-6 py-12 text-center text-slate-400 font-medium">
@@ -39,7 +39,7 @@ export default function ActivitiesTable({ activities, onEdit, onDelete }) {
             ) : (
               activities.map((act) => (
                 <tr key={act._id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-slate-900 max-w-xs truncate" title={act.activityName}>
+                  <td className="px-6 py-4 font-medium text-slate-700 max-w-xs truncate" title={act.activityName}>
                     {act.activityName}
                   </td>
                   <td className="px-6 py-4">{act.academicYear}</td>

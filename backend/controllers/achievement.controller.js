@@ -13,7 +13,9 @@ exports.createAchievement = async (req, res) => {
 
 exports.getAchievements = async (req, res) => {
   try {
-    const achievements = await Achievement.find().sort({ createdAt: -1 });
+    const achievements = await Achievement.find()
+      .populate("achievedBy")
+      .sort({ createdAt: -1 });
     return res.status(200).json({ success: true, achievements });
   } catch (error) {
     console.error("Error fetching achievements:", error);
@@ -46,7 +48,11 @@ exports.deleteAchievement = async (req, res) => {
 exports.getDepartmentAchievements = async (req, res) => {
   try {
     const { departmentId } = req.params;
-    const achievements = await Achievement.find({ departmentId })
+    const { approvalStatus } = req.query;
+    let query = { departmentId };
+    if (approvalStatus) query.approvalStatus = approvalStatus;
+
+    const achievements = await Achievement.find(query)
       .populate("achievedBy")
       .sort({ createdAt: -1 });
     return res.status(200).json({ success: true, achievements });

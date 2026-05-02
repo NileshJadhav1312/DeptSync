@@ -9,11 +9,22 @@ import { getAchievements, createAchievement, updateAchievement, deleteAchievemen
 import { getDepartmentClassrooms, joinDepartment, requestJoinClass } from "../../services/classroom";
 import ActivitiesTable from "../../components/teacher/ActivitiesTable";
 import ActivityFormModal from "../../components/teacher/ActivityFormModal";
-import AchievementsTable from "../../components/student/StudentAchievementsTable";
-import AchievementFormModal from "../../components/student/StudentAchievementFormModal";
+import AchievementsTable from "../../components/common/AchievementsTable";
+import AchievementFormModal from "../../components/common/AchievementFormModal";
+import JournalPublicationsTable from "../../components/common/JournalPublicationsTable";
+import JournalPublicationFormModal from "../../components/common/JournalPublicationFormModal";
+import PatentsTable from "../../components/common/PatentsTable";
+import PatentFormModal from "../../components/common/PatentFormModal";
+import CopyrightsTable from "../../components/common/CopyrightsTable";
+import CopyrightFormModal from "../../components/common/CopyrightFormModal";
+import { GrantsTable, GrantFormModal } from "../../components/common/GrantsItems";
 import { getConferencePublications, createConferencePublication, updateConferencePublication, deleteConferencePublication } from "../../services/research";
-import ConferencePublicationsTable from "../../components/teacher/ConferencePublicationsTable";
-import ConferencePublicationFormModal from "../../components/teacher/ConferencePublicationFormModal";
+import ConferencePublicationsTable from "../../components/common/ConferencePublicationsTable";
+import ConferencePublicationFormModal from "../../components/common/ConferencePublicationFormModal";
+import { getProjects, createProject, updateProject, deleteProject, getJournalPublications, createJournalPublication, updateJournalPublication, deleteJournalPublication, getPatents, createPatent, updatePatent, deletePatent, getCopyrights, createCopyright, updateCopyright, deleteCopyright, getGrants, createGrant, updateGrant, deleteGrant, getConsultancies, createConsultancy, updateConsultancy, deleteConsultancy } from "../../services/research";
+import ProjectsTable from "../../components/common/ProjectsTable";
+import ProjectFormModal from "../../components/common/ProjectFormModal";
+import { ConsultanciesTable, ConsultancyFormModal } from "../../components/teacher/ConsultancyItems";
 
 export default function StudentDashboard() {
   const { user, logout } = useAuth();
@@ -37,10 +48,43 @@ export default function StudentDashboard() {
   const [isConferenceModalOpen, setIsConferenceModalOpen] = useState(false);
   const [editingConference, setEditingConference] = useState(null);
 
+  const [projects, setProjects] = useState([]);
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
+
+  const [journals, setJournals] = useState([]);
+  const [isJournalModalOpen, setIsJournalModalOpen] = useState(false);
+  const [editingJournal, setEditingJournal] = useState(null);
+
+  const [patents, setPatents] = useState([]);
+  const [isPatentModalOpen, setIsPatentModalOpen] = useState(false);
+  const [editingPatent, setEditingPatent] = useState(null);
+
+  const [copyrights, setCopyrights] = useState([]);
+  const [isCopyrightModalOpen, setIsCopyrightModalOpen] = useState(false);
+  const [editingCopyright, setEditingCopyright] = useState(null);
+
+  const [grants, setGrants] = useState([]);
+  const [isGrantModalOpen, setIsGrantModalOpen] = useState(false);
+  const [editingGrant, setEditingGrant] = useState(null);
+
+  const [consultancies, setConsultancies] = useState([]);
+  const [isConsultancyModalOpen, setIsConsultancyModalOpen] = useState(false);
+  const [editingConsultancy, setEditingConsultancy] = useState(null);
+
+
   const isAchievements = section === "achievements";
   const isActivities = section === "activities";
   const isAcademics = section === "academics";
   const isConferences = section === "conferences";
+  const isProjects = section === "projects";
+
+  const isJournals = section === "journals";
+  const isPatents = section === "patents";
+  const isCopyrights = section === "copyrights";
+  const isGrants = section === "grants";
+  const isConsultancies = section === "consultancies";
+
 
   useEffect(() => {
     if (user?.id) {
@@ -48,6 +92,11 @@ export default function StudentDashboard() {
       fetchActivities();
       fetchAchievements();
       fetchConferencePublicationsList();
+            fetchJournals();
+      fetchPatents();
+      fetchCopyrights();
+      fetchGrants();
+      fetchConsultancies();
     }
   }, [user?.id]);
 
@@ -101,6 +150,22 @@ export default function StudentDashboard() {
       console.error("Failed to load conferences.", err);
     }
   };
+
+  const fetchProjects = async () => {
+    try {
+      const response = await getProjects({ userId: user.id, role: "student" });
+      setProjects(response.projects || []);
+    } catch (err) {
+      console.error("Failed to load projects.", err);
+    }
+  };
+
+  const fetchJournals = async () => { try { const resp = await getJournalPublications({ studentId: user.id }); setJournals(resp.journalPublications || []); } catch (err) { console.error(err); } };
+  const fetchPatents = async () => { try { const resp = await getPatents({ studentId: user.id }); setPatents(resp.patents || []); } catch (err) { console.error(err); } };
+  const fetchCopyrights = async () => { try { const resp = await getCopyrights({ studentId: user.id }); setCopyrights(resp.copyrights || []); } catch (err) { console.error(err); } };
+  const fetchGrants = async () => { try { const resp = await getGrants({ studentId: user.id }); setGrants(resp.grants || []); } catch (err) { console.error(err); } };
+  const fetchConsultancies = async () => { try { const resp = await getConsultancies({ studentId: user.id }); setConsultancies(resp.consultancies || []); } catch (err) { console.error(err); } };
+
 
   const handleJoinDepartment = async (e) => {
     e.preventDefault();
@@ -164,6 +229,8 @@ export default function StudentDashboard() {
           createdBy: user?.id || user?.username || user?.email,
           achievedByType: "Student",
           achievedBy: user?.id,
+          createdById: user?.id,
+          createdByModel: "Student",
           achievedByName: profileData?.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user?.name || user?.username || "Student",
           departmentId: profileData?.departmentId || null,
           departmentName: profileData?.departmentName || null,
@@ -200,10 +267,13 @@ export default function StudentDashboard() {
 
   const handleCreateConference = async (payload) => {
     try {
+      const studentName = profileData ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user.name || "Student";
       const conferencePayload = {
         ...payload,
         studentId: user.id,
-        studentName: profileData ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user.name || "Student",
+        studentName: studentName,
+        createdById: user.id,
+        createdByName: studentName,
         departmentId: profileData?.departmentId,
         departmentName: profileData?.departmentName,
         createdByModel: "Student",
@@ -212,6 +282,7 @@ export default function StudentDashboard() {
       if (editingConference) await updateConferencePublication(editingConference._id, conferencePayload);
       else await createConferencePublication(conferencePayload);
       setEditingConference(null);
+      setIsConferenceModalOpen(false);
       fetchConferencePublicationsList();
     } catch (err) { console.error("Failed to save conference", err); }
   };
@@ -224,6 +295,108 @@ export default function StudentDashboard() {
       } catch (err) { console.error("Failed to delete conference", err); }
     } 
   };
+
+  const handleCreateProject = async (payload) => {
+    try {
+      const studentName = profileData ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user.name || "Student";
+      const projectPayload = {
+        ...payload,
+        userId: user.id,
+        studentName: studentName,
+        createdById: user.id,
+        createdByName: studentName,
+        departmentId: profileData?.departmentId,
+        departmentName: profileData?.departmentName,
+        roleModel: "Student",
+        createdByModel: "Student",
+      };
+      if (editingProject) await updateProject(editingProject._id, projectPayload);
+      else await createProject(projectPayload);
+      setEditingProject(null);
+      setIsProjectModalOpen(false);
+      fetchProjects();
+    } catch (err) { console.error("Failed to save project", err); }
+  };
+
+  const handleDeleteProject = async (item) => {
+    if (window.confirm("Are you sure you want to delete this project?")) {
+      try {
+        await deleteProject(item._id);
+        fetchProjects();
+      } catch (err) { console.error("Failed to delete project", err); }
+    }
+  };
+
+  const handleCreateJournal = async (payload) => {
+    try {
+      const jPayload = { ...payload, createdById: user.id, createdByName: profileData?.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user.name, studentId: user.id, studentName: profileData?.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user.name, departmentId: profileData?.departmentId, departmentName: profileData?.departmentName, createdByModel: "Student" };
+      if (editingJournal) await updateJournalPublication(editingJournal._id, jPayload);
+      else await createJournalPublication(jPayload);
+      setEditingJournal(null); 
+      setIsJournalModalOpen(false);
+      fetchJournals();
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteJournal = async (item) => { if (window.confirm("Delete journal?")) { try { await deleteJournalPublication(item._id); fetchJournals(); } catch (err) { console.error(err); } } };
+
+  const handleCreatePatent = async (payload) => {
+    try {
+      const pPayload = { ...payload, createdById: user.id, createdByName: profileData?.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user.name, studentId: user.id, studentName: profileData?.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user.name, departmentId: profileData?.departmentId, departmentName: profileData?.departmentName, createdByModel: "Student" };
+      if (editingPatent) await updatePatent(editingPatent._id, pPayload);
+      else await createPatent(pPayload);
+      setEditingPatent(null); 
+      setIsPatentModalOpen(false);
+      fetchPatents();
+    } catch (err) { console.error(err); }
+  };
+  const handleDeletePatent = async (item) => { if (window.confirm("Delete patent?")) { try { await deletePatent(item._id); fetchPatents(); } catch (err) { console.error(err); } } };
+
+  const handleCreateCopyright = async (payload) => {
+    try {
+      const cPayload = { ...payload, createdById: user.id, createdByName: profileData?.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user.name, studentId: user.id, studentName: profileData?.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user.name, departmentId: profileData?.departmentId, departmentName: profileData?.departmentName, createdByModel: "Student" };
+      if (editingCopyright) await updateCopyright(editingCopyright._id, cPayload);
+      else await createCopyright(cPayload);
+      setEditingCopyright(null); 
+      setIsCopyrightModalOpen(false);
+      fetchCopyrights();
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteCopyright = async (item) => { if (window.confirm("Delete copyright?")) { try { await deleteCopyright(item._id); fetchCopyrights(); } catch (err) { console.error(err); } } };
+
+  const handleCreateGrant = async (payload) => {
+    try {
+      const gPayload = { ...payload, createdById: user.id, createdByName: profileData?.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user.name, studentId: user.id, studentName: profileData?.firstName ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user.name, departmentId: profileData?.departmentId, departmentName: profileData?.departmentName, createdByModel: "Student" };
+      if (editingGrant) await updateGrant(editingGrant._id, gPayload);
+      else await createGrant(gPayload);
+      setEditingGrant(null); 
+      setIsGrantModalOpen(false);
+      fetchGrants();
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteGrant = async (item) => { if (window.confirm("Delete grant?")) { try { await deleteGrant(item._id); fetchGrants(); } catch (err) { console.error(err); } } };
+
+  const handleCreateConsultancy = async (payload) => {
+    try {
+      const studentName = profileData ? `${profileData.firstName} ${profileData.lastName || ''}`.trim() : user.name || "Student";
+      const cPayload = { 
+        ...payload, 
+        createdById: user.id, 
+        createdByName: studentName, 
+        studentId: user.id, 
+        studentName: studentName, 
+        departmentId: profileData?.departmentId, 
+        departmentName: profileData?.departmentName, 
+        createdByModel: "Student" 
+      };
+      if (editingConsultancy) await updateConsultancy(editingConsultancy._id, cPayload);
+      else await createConsultancy(cPayload);
+      setEditingConsultancy(null); 
+      setIsConsultancyModalOpen(false);
+      fetchConsultancies();
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteConsultancy = async (item) => { if (window.confirm("Delete consultancy?")) { try { await deleteConsultancy(item._id); fetchConsultancies(); } catch (err) { console.error(err); } } };
+
 
   const myActivities = useMemo(() => {
     if (!user?.id) return activities;
@@ -243,14 +416,20 @@ export default function StudentDashboard() {
     { title: "PRN Number", value: prnNumberStr, helper: "Your university roll number" },
     { title: "Semester", value: profileData?.semester || "N/A", helper: "Current academic semester" },
     { title: "Achievements", value: myAchievements.length, helper: "Your tracked achievements", onClick: () => navigate("/student/achievements"), className: "cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all" },
-    { title: "Conferences", value: conferencePublications.length, helper: "Conference Papers", onClick: () => navigate("/student/conferences"), className: "cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all border-l-4 border-l-blue-500 shadow-sm" }
+    { title: "Conferences", value: conferencePublications.length, helper: "Conference Papers", onClick: () => navigate("/student/conferences"), className: "cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all border-l-4 border-l-blue-500 shadow-sm" },
+    { title: "Projects", value: projects.length, helper: "Academic Projects", onClick: () => navigate("/student/projects"), className: "cursor-pointer hover:shadow-lg hover:border-cyan-300 transition-all border-l-4 border-l-cyan-500 shadow-sm" },
+    { title: "Journals", value: journals.length, helper: "Journal Papers", onClick: () => navigate("/student/journals"), className: "cursor-pointer hover:shadow-lg hover:border-emerald-300 transition-all border-l-4 border-l-emerald-500 shadow-sm" },
+    { title: "Patents", value: patents.length, helper: "Filed Patents", onClick: () => navigate("/student/patents"), className: "cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all border-l-4 border-l-indigo-500 shadow-sm" },
+    { title: "Copyrights", value: copyrights.length, helper: "Registered Copyrights", onClick: () => navigate("/student/copyrights"), className: "cursor-pointer hover:shadow-lg hover:border-orange-300 transition-all border-l-4 border-l-orange-500 shadow-sm" },
+    { title: "Grants", value: grants.length, helper: "Research Grants", onClick: () => navigate("/student/grants"), className: "cursor-pointer hover:shadow-lg hover:border-green-300 transition-all border-l-4 border-l-green-500 shadow-sm" },
+    { title: "Consultancies", value: consultancies.length, helper: "Professional Projects", onClick: () => navigate("/student/consultancies"), className: "cursor-pointer hover:shadow-lg hover:border-teal-300 transition-all border-l-4 border-l-teal-500 shadow-sm" }
   ];
 
   return (
     <DashboardLayout
       role="student"
-      title={isAchievements ? "My Achievements" : isAcademics ? "Academics" : isConferences ? "Conference Publications" : "Student Dashboard"}
-      subtitle={isAchievements ? "Add, modify or delete your achievements." : isAcademics ? "Manage your academics and class." : isConferences ? "Track your conference publications." : "Track your academic details."}
+      title={isAchievements ? "My Achievements" : isActivities ? "Extra-Curricular Activities" : isAcademics ? "Academics" : isConferences ? "Conference Publications" : isProjects ? "My Projects" : isJournals ? "Journal Publications" : isPatents ? "My Patents" : isCopyrights ? "My Copyrights" : isGrants ? "My Grants" : isConsultancies ? "Consultancy Projects" : "Student Dashboard"}
+      subtitle={isAchievements ? "Add, modify or delete your achievements." : isActivities ? "Track your participations and events." : isAcademics ? "Manage your academics and class." : isConferences ? "Track your conference publications." : isProjects ? "Track your academic projects." : isJournals ? "Track your journal publications." : isPatents ? "Track your patents." : isCopyrights ? "Track your copyrights." : isGrants ? "Track your research grants." : isConsultancies ? "Track your consultancy projects." : "Track your academic details."}
       actions={isAchievements ? (
         <button
           className=" text-xs sm:text-sm px-3 sm:px-4 py-2 bg-white  text-black"
@@ -272,6 +451,23 @@ export default function StudentDashboard() {
         >
           Add Conference Paper
         </button>
+      ) : isProjects ? (
+        <button
+          className="bg-white text-xs sm:text-sm px-3 sm:px-4 py-2 text-black"
+          onClick={() => { setEditingProject(null); setIsProjectModalOpen(true) }}
+        >
+          Add Project
+        </button>
+      ) : isJournals ? (
+        <button className="bg-white text-xs sm:text-sm px-3 sm:px-4 py-2 text-black" onClick={() => { setEditingJournal(null); setIsJournalModalOpen(true) }}>Add Journal</button>
+      ) : isPatents ? (
+        <button className="bg-white text-xs sm:text-sm px-3 sm:px-4 py-2 text-black" onClick={() => { setEditingPatent(null); setIsPatentModalOpen(true) }}>Add Patent</button>
+      ) : isCopyrights ? (
+        <button className="bg-white text-xs sm:text-sm px-3 sm:px-4 py-2 text-black" onClick={() => { setEditingCopyright(null); setIsCopyrightModalOpen(true) }}>Add Copyright</button>
+      ) : isGrants ? (
+        <button className="bg-white text-xs sm:text-sm px-3 sm:px-4 py-2 text-black" onClick={() => { setEditingGrant(null); setIsGrantModalOpen(true) }}>Add Grant</button>
+      ) : isConsultancies ? (
+        <button className="bg-white text-xs sm:text-sm px-3 sm:px-4 py-2 text-black" onClick={() => { setEditingConsultancy(null); setIsConsultancyModalOpen(true) }}>Add Consultancy</button>
       ) : null}
       onLogout={() => {
         logout();
@@ -296,6 +492,21 @@ export default function StudentDashboard() {
         onSubmit={handleCreateConference}
         initialData={editingConference}
       />
+      <ProjectFormModal
+        isOpen={isProjectModalOpen}
+        onClose={() => setIsProjectModalOpen(false)}
+        onSubmit={handleCreateProject}
+        project={editingProject}
+        role="student"
+        userProfile={profileData}
+      />
+
+      <JournalPublicationFormModal isOpen={isJournalModalOpen} onClose={() => setIsJournalModalOpen(false)} onSubmit={handleCreateJournal} initialData={editingJournal} />
+      <PatentFormModal isOpen={isPatentModalOpen} onClose={() => setIsPatentModalOpen(false)} onSubmit={handleCreatePatent} initialData={editingPatent} />
+      <CopyrightFormModal isOpen={isCopyrightModalOpen} onClose={() => setIsCopyrightModalOpen(false)} onSubmit={handleCreateCopyright} initialData={editingCopyright} />
+      <GrantFormModal isOpen={isGrantModalOpen} onClose={() => setIsGrantModalOpen(false)} onSubmit={handleCreateGrant} initialData={editingGrant} />
+      <ConsultancyFormModal isOpen={isConsultancyModalOpen} onClose={() => setIsConsultancyModalOpen(false)} onSubmit={handleCreateConsultancy} initialData={editingConsultancy} />
+
 
       {isAcademics && (
         <div className="space-y-6">
@@ -368,7 +579,7 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      {!isAchievements && !isActivities && !isAcademics && !isConferences && (
+      {!isAchievements && !isActivities && !isAcademics && !isConferences && !isProjects && !isJournals && !isPatents && !isCopyrights && !isGrants && !isConsultancies && (
         <>
           <div className="mb-6 rounded-2xl bg-indigo-50 p-6 border border-indigo-500">
             <h2 className="text-lg font-semibold text-slate-900">
@@ -400,10 +611,7 @@ export default function StudentDashboard() {
             ))}
           </div>
 
-          <div className="mt-8">
-            <h3 className="text-xl font-bold text-slate-900 mb-4">My Activities</h3>
-            <ActivitiesTable activities={myActivities} onEdit={openActivityEditModal} onDelete={handleDeleteActivity} />
-          </div>
+           
         </>
       )}
 
@@ -422,6 +630,51 @@ export default function StudentDashboard() {
           onDelete={handleDeleteConference} 
         />
       )}
+      {isProjects && (
+        <ProjectsTable 
+          projects={projects} 
+          onEdit={(p) => { setEditingProject(p); setIsProjectModalOpen(true); }} 
+          onDelete={handleDeleteProject} 
+        />
+      )}
+      {isJournals && (
+        <JournalPublicationsTable 
+          publications={journals} 
+          onEdit={(j) => { setEditingJournal(j); setIsJournalModalOpen(true); }} 
+          onDelete={handleDeleteJournal} 
+        />
+      )}
+      {isPatents && (
+        <PatentsTable 
+          patents={patents} 
+          onEdit={(p) => { setEditingPatent(p); setIsPatentModalOpen(true); }} 
+          onDelete={handleDeletePatent} 
+        />
+      )}
+      {isCopyrights && (
+        <CopyrightsTable 
+          copyrights={copyrights} 
+          onEdit={(c) => { setEditingCopyright(c); setIsCopyrightModalOpen(true); }} 
+          onDelete={handleDeleteCopyright} 
+        />
+      )}
+      {isGrants && (
+        <GrantsTable 
+          grants={grants} 
+          onEdit={(g) => { setEditingGrant(g); setIsGrantModalOpen(true); }} 
+          onDelete={handleDeleteGrant} 
+        />
+      )}
+      {isConsultancies && (
+        <ConsultanciesTable 
+          items={consultancies} 
+          onEdit={(c) => { setEditingConsultancy(c); setIsConsultancyModalOpen(true); }} 
+          onDelete={handleDeleteConsultancy} 
+        />
+      )}
     </DashboardLayout>
   );
 }
+
+
+

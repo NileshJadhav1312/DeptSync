@@ -1,4 +1,5 @@
 const Consultancy = require("../models/consultancy.model");
+const mongoose = require("mongoose");
 
 // Create Consultancy
 async function createConsultancy(req, res) {
@@ -6,7 +7,9 @@ async function createConsultancy(req, res) {
     const {
       year,
       teacherId,
+      studentId,
       teacherName,
+      studentName,
       departmentId,
       departmentName,
       title,
@@ -27,16 +30,29 @@ async function createConsultancy(req, res) {
       impact,
       clientFeedback,
       tags,
+      createdById,
+      createdByName,
+      createdByModel
     } = req.body;
 
-    if (!year || !title || !revenueGenerated || !teacherId || !departmentId) {
+    if (!year || !title || !revenueGenerated || !departmentId) {
       return res.status(400).json({ message: "Missing required fields." });
     }
 
+    // Determine owner
+    const finalCreatedById = createdById || teacherId || studentId;
+    const finalCreatedByName = createdByName || teacherName || studentName;
+    const finalCreatedByModel = createdByModel || (teacherId ? "Teacher" : "Student");
+
+    if (!finalCreatedById || !finalCreatedByName) {
+       return res.status(400).json({ message: "Creator information is missing." });
+    }
+
+    const approvalStatus = finalCreatedByModel === "Student" ? "Pending" : "Approved";
     const consultancy = await Consultancy.create({
       year,
-      teacherId,
-      teacherName,
+      teacherId: teacherId || (finalCreatedByModel === "Teacher" ? finalCreatedById : undefined),
+      teacherName: teacherName || (finalCreatedByModel === "Teacher" ? finalCreatedByName : undefined),
       departmentId,
       departmentName,
       title,
@@ -57,7 +73,13 @@ async function createConsultancy(req, res) {
       impact,
       clientFeedback,
       tags,
-      createdBy: teacherId,
+      studentId: finalCreatedByModel === "Student" ? finalCreatedById : studentId,
+      studentName: finalCreatedByModel === "Student" ? finalCreatedByName : studentName,
+      createdById: finalCreatedById,
+      createdByName: finalCreatedByName,
+      createdByModel: finalCreatedByModel,
+      approvalStatus,
+      isActive: true
     });
 
     return res.status(201).json({ message: "Consultancy entry added successfully.", consultancy });
@@ -70,20 +92,54 @@ async function createConsultancy(req, res) {
 // Get all Consultancies (with filtering)
 async function getAllConsultancies(req, res) {
   try {
-    const { teacherId, departmentId, year, consultancyType, level } = req.query;
+    const { teacherId, studentId, departmentId, year, consultancyType, level, approvalStatus } = req.query;
     let query = { isActive: true };
 
     if (teacherId) query.teacherId = teacherId;
+    if (studentId) {
+        try {
+            const sId = new mongoose.Types.ObjectId(studentId);
+            query.$or = [
+                { studentId: sId },
+                { createdById: sId }
+            ];
+        } catch (e) {
+            query.$or = [
+                { studentId: studentId },
+                { createdById: studentId, createdByModel: "Student" }
+            ];
+        }
+    }
     if (departmentId) query.departmentId = departmentId;
     if (year) query.year = year;
     if (consultancyType) query.consultancyType = consultancyType;
     if (level) query.level = level;
+    if (approvalStatus) query.approvalStatus = approvalStatus;
 
-    const consultancies = await Consultancy.find(query).sort({ year: -1 });
+    const consultancies = await Consultancy.find(query)
+      .populate("teacherId", "employeeId")
+      .populate({
+        path: "createdById",
+        select: "employeeId prnNumber",
+      })
+      .sort({ year: -1 });
     return res.status(200).json({ consultancies });
   } catch (error) {
     console.error("getAllConsultancies error", error);
     return res.status(500).json({ message: "Failed to fetch consultancy entries.", error: error.message });
+  }
+}
+
+async function reviewConsultancy(req, res) {
+  try {
+    const { id } = req.params;
+    const { approvalStatus, coordinatorComment, approvedBy } = req.body;
+    if (!["Pending", "Approved", "Rejected"].includes(approvalStatus)) return res.status(400).json({ message: "Invalid approval status." });
+    const item = await Consultancy.findByIdAndUpdate(id, { approvalStatus, coordinatorComment, approvedBy }, { new: true });
+    if (!item) return res.status(404).json({ message: "Consultancy not found" });
+    return res.status(200).json({ item });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to review Consultancy.", error: error.message });
   }
 }
 
@@ -139,5 +195,6 @@ module.exports = {
   getAllConsultancies,
   getConsultancyById,
   updateConsultancy,
-  deleteConsultancy
+  deleteConsultancy,
+  reviewConsultancy
 };

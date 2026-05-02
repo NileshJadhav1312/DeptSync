@@ -1,4 +1,5 @@
 const Grant = require("../models/grant.model");
+const mongoose = require("mongoose");
 
 // Create Grant
 async function createGrant(req, res) {
@@ -18,12 +19,15 @@ async function createGrant(req, res) {
       teacherName,
       departmentId,
       departmentName,
+      studentId,
+      studentName,
     } = req.body;
 
-    if (!academicYear || !projectTitle || !teacherId || !departmentId) {
+    if (!academicYear || !projectTitle || !departmentId) {
       return res.status(400).json({ message: "Missing required fields." });
     }
 
+    const approvalStatus = req.body.createdByModel === "Student" ? "Pending" : "Approved";
     const grant = await Grant.create({
       academicYear,
       projectTitle,
@@ -39,8 +43,14 @@ async function createGrant(req, res) {
       teacherName,
       departmentId,
       departmentName,
+      studentId,
+      studentName,
+      createdByModel: req.body.createdByModel || "Teacher",
+      createdById: req.body.createdById,
+      createdByName: req.body.createdByName,
       facultyId: teacherId, // For compatibility
       facultyName: teacherName,
+      approvalStatus
     });
 
     return res.status(201).json({ message: "Grant added successfully.", grant });
@@ -53,15 +63,32 @@ async function createGrant(req, res) {
 // Get all Grants (with filtering)
 async function getAllGrants(req, res) {
   try {
-    const { teacherId, departmentId, academicYear, status } = req.query;
-    let query = { isActive: true };
+    const { teacherId, studentId, departmentId, academicYear, status, approvalStatus } = req.query;
+    let query = { isActive: { $ne: false } }; if (approvalStatus) query.approvalStatus = approvalStatus;
 
     if (teacherId) query.teacherId = teacherId;
+    if (studentId) {
+      try {
+        const sId = new mongoose.Types.ObjectId(studentId);
+        query.$or = [
+          { studentId: sId },
+          { createdById: sId }
+        ];
+      } catch (e) {
+        query.$or = [
+          { studentId: studentId },
+          { createdById: studentId }
+        ];
+      }
+    }
     if (departmentId) query.departmentId = departmentId;
     if (academicYear) query.academicYear = academicYear;
     if (status) query.status = status;
 
-    const grants = await Grant.find(query).sort({ academicYear: -1 });
+    const grants = await Grant.find(query)
+      .populate("teacherId", "employeeId")
+      .populate("studentId", "prnNumber className email")
+      .sort({ academicYear: -1 });
     return res.status(200).json({ grants });
   } catch (error) {
     console.error("getAllGrants error", error);
@@ -116,10 +143,25 @@ async function deleteGrant(req, res) {
   }
 }
 
+async function reviewGrant(req, res) {
+  try {
+    const { id } = req.params;
+    const { approvalStatus, coordinatorComment, approvedBy } = req.body;
+    if (!["Pending", "Approved", "Rejected"].includes(approvalStatus)) return res.status(400).json({ message: "Invalid approval status." });
+    const item = await Grant.findByIdAndUpdate(id, { approvalStatus, coordinatorComment, approvedBy }, { new: true });
+    if (!item) return res.status(404).json({ message: "Grant not found" });
+    return res.status(200).json({ item });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to review Grant.", error: error.message });
+  }
+}
+
 module.exports = {
   createGrant,
   getAllGrants,
   getGrantById,
   updateGrant,
-  deleteGrant
+  deleteGrant,
+  reviewGrant
 };
+

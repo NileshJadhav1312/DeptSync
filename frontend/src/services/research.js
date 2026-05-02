@@ -44,27 +44,7 @@ export const deleteCommittee = async (id) => {
   return response.data;
 };
 
-// 3. Research Papers
-export const getResearchPapers = async (params) => {
-  const response = await api.get("/research-papers", { params });
-  return response.data;
-};
-export const getResearchPaperById = async (id) => {
-  const response = await api.get(`/research-papers/${id}`);
-  return response.data;
-};
-export const createResearchPaper = async (data) => {
-  const response = await api.post("/research-papers", data);
-  return response.data;
-};
-export const updateResearchPaper = async (id, data) => {
-  const response = await api.put(`/research-papers/${id}`, data);
-  return response.data;
-};
-export const deleteResearchPaper = async (id) => {
-  const response = await api.delete(`/research-papers/${id}`);
-  return response.data;
-};
+
 
 // 4. Grants
 export const getGrants = async (params) => {
@@ -175,11 +155,6 @@ export const deleteConferencePublication = async (id) => {
   const response = await api.delete(`/conference-publications/${id}`);
   return response.data;
 };
-export const reviewConferencePublication = async (id, data) => {
-  const response = await api.put(`/conference-publications/review/${id}`, data);
-  return response.data;
-};
-
 
 // 9. Book Chapters
 export const getBookChapters = async (params) => {
@@ -244,5 +219,56 @@ export const updateCopyright = async (id, data) => {
 };
 export const deleteCopyright = async (id) => {
   const response = await api.delete(`/copyrights/${id}`);
+  return response.data;
+};
+
+// 12. Projects
+export const getProjects = async (params) => {
+  const response = await api.get("/projects", { params });
+  return response.data;
+};
+export const getProjectById = async (id) => {
+  const response = await api.get(`/projects/${id}`);
+  return response.data;
+};
+export const createProject = async (data) => {
+  const response = await api.post("/projects", data);
+  return response.data;
+};
+export const updateProject = async (id, data) => {
+  const response = await api.put(`/projects/${id}`, data);
+  return response.data;
+};
+export const deleteProject = async (id) => {
+  const response = await api.delete(`/projects/${id}`);
+  return response.data;
+};
+
+export const reviewPatent = async (id, data) => {
+  const response = await api.put("/patents/" + id + "/review", data);
+  return response.data;
+};
+export const reviewCopyright = async (id, data) => {
+  const response = await api.put("/copyrights/" + id + "/review", data);
+  return response.data;
+};
+export const reviewGrant = async (id, data) => {
+  const response = await api.put("/grants/" + id + "/review", data);
+  return response.data;
+};
+export const reviewProject = async (id, data) => {
+  const response = await api.put("/projects/" + id + "/review", data);
+  return response.data;
+};
+export const reviewConsultancy = async (id, data) => {
+  const response = await api.put("/consultancies/" + id + "/review", data);
+  return response.data;
+};
+export const reviewJournalPublication = async (id, data) => {
+  const response = await api.put("/journal-publications/" + id + "/review", data);
+  return response.data;
+};
+export const reviewConferencePublication = async (id, data) => {
+  const response = await api.put("/conference-publications/" + id + "/review", data);
   return response.data;
 };

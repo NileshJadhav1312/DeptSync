@@ -1,23 +1,44 @@
 const mongoose = require("mongoose");
 
 const patentSchema = new mongoose.Schema({
-  teacherId: {
+  // Owner info — teacher or student
+  createdByModel: {
+    type: String,
+    enum: ["Teacher", "Student"],
+    required: true,
+    default: "Teacher"
+  },
+  createdById: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Teacher",
+    refPath: "createdByModel",
     required: true
   },
-  teacherName: {
+  createdByName: {
     type: String,
     required: true
+  },
+  // Legacy teacher fields (kept for backwards compatibility)
+  teacherId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Teacher"
+  },
+  teacherName: {
+    type: String
+  },
+  // Student-specific fields
+  studentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Student"
+  },
+  studentName: {
+    type: String
   },
   departmentId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Department",
-    required: true
+    ref: "Department"
   },
   departmentName: {
-    type: String,
-    required: true
+    type: String
   },
 
   isPccoeApplicant: {
@@ -68,7 +89,19 @@ const patentSchema = new mongoose.Schema({
   proofDocument: {
     type: String // Stores the file path or URL
   },
-  isActive: {
+      approvalStatus: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected"],
+      default: "Pending",
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Teacher",
+    },
+    coordinatorComment: {
+      type: String,
+    },
+    isActive: {
     type: Boolean,
     default: true
   }
@@ -77,3 +110,4 @@ const patentSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("Patent", patentSchema);
+

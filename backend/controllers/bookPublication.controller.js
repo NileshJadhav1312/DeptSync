@@ -23,7 +23,9 @@ async function getAllBookPublications(req, res) {
     if (teacherId) query.teacherId = teacherId;
     if (departmentId) query.departmentId = departmentId;
 
-    const bookPublications = await BookPublication.find(query).sort({ publicationYear: -1 });
+    const bookPublications = await BookPublication.find(query)
+      .populate("teacherId", "employeeId")
+      .sort({ publicationYear: -1 });
     return res.status(200).json({ bookPublications });
   } catch (error) {
     console.error("getAllBookPublications error", error);

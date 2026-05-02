@@ -4,10 +4,10 @@ export default function BookChapterDetailsModal({ isOpen, onClose, chapter }) {
   if (!isOpen || !chapter) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
-      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl max-h-[90vh] flex flex-col">
-        <div className="p-8 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-900">Book Chapter Details</h2>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -16,11 +16,11 @@ export default function BookChapterDetailsModal({ isOpen, onClose, chapter }) {
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto space-y-4 text-sm">
-          <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+        <div className="p-6 overflow-y-auto space-y-4">
+          <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
             <div className="col-span-2">
               <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Chapter Title</span>
-              <span className="font-bold text-slate-900 text-base">{chapter.chapterTitle}</span>
+              <span className="font-semibold text-slate-900 text-base">{chapter.chapterTitle}</span>
             </div>
             <div className="col-span-2">
               <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Book Title</span>
@@ -53,7 +53,7 @@ export default function BookChapterDetailsModal({ isOpen, onClose, chapter }) {
              <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs mb-1">Indexing</span>
              <div className="flex flex-wrap gap-2 mt-1">
                 {chapter.indexing?.map((idx) => (
-                    <span key={idx} className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[10px] font-bold uppercase ring-1 ring-emerald-100">{idx}</span>
+                    <span key={idx} className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-bold uppercase border border-slate-200">{idx}</span>
                 )) || "None"}
              </div>
           </div>

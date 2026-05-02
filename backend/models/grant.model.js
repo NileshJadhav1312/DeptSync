@@ -40,25 +40,39 @@ const grantSchema = new mongoose.Schema({
     default: "pending"
   },
 
-  // Teacher & Department Info (Required by user)
+  // Owner info — teacher or student
+  createdByModel: {
+    type: String,
+    enum: ["Teacher", "Student"],
+    required: true,
+    default: "Teacher"
+  },
+  createdById: {
+    type: mongoose.Schema.Types.ObjectId,
+    refPath: "createdByModel",
+    required: true
+  },
+  createdByName: {
+    type: String,
+    required: true
+  },
+  // Legacy teacher fields
   teacherId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Teacher",
-    required: true
+    ref: "Teacher"
   },
-  teacherName: {
-    type: String,
-    required: true
+  teacherName: { type: String },
+  // Student fields
+  studentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Student"
   },
+  studentName: { type: String },
   departmentId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Department",
-    required: true
+    ref: "Department"
   },
-  departmentName: {
-    type: String,
-    required: true
-  },
+  departmentName: { type: String },
 
   // Compatibility/Old fields
   facultyName: String,
@@ -76,7 +90,19 @@ const grantSchema = new mongoose.Schema({
     ref: "Document"
   },
 
-  isActive: {
+      approvalStatus: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected"],
+      default: "Pending",
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Teacher",
+    },
+    coordinatorComment: {
+      type: String,
+    },
+    isActive: {
     type: Boolean,
     default: true
   }

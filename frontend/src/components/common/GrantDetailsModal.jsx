@@ -4,10 +4,10 @@ export default function GrantDetailsModal({ isOpen, onClose, grant }) {
   if (!isOpen || !grant) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
-      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl max-h-[90vh] flex flex-col">
-        <div className="p-8 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-900">Research Grant Details</h2>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -16,11 +16,11 @@ export default function GrantDetailsModal({ isOpen, onClose, grant }) {
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto space-y-4 text-sm">
-          <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+        <div className="p-6 overflow-y-auto space-y-4">
+          <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
             <div className="col-span-2">
               <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Project Title</span>
-              <span className="font-bold text-slate-900 text-base">{grant.projectTitle}</span>
+              <span className="font-semibold text-slate-900 text-base">{grant.projectTitle}</span>
             </div>
             <div>
               <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Academic Year</span>
@@ -36,10 +36,10 @@ export default function GrantDetailsModal({ isOpen, onClose, grant }) {
             </div>
             <div>
               <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Status</span>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide mt-1 w-fit ${
-                  grant.status === 'completed' ? 'bg-green-100 text-green-700' :
-                  grant.status === 'ongoing' ? 'bg-blue-100 text-blue-700' :
-                  'bg-yellow-100 text-yellow-700'
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide mt-1 w-fit border ${
+                  grant.status === 'completed' ? 'bg-green-50 text-green-700 border-green-100' :
+                  grant.status === 'ongoing' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                  'bg-yellow-50 text-yellow-700 border-yellow-100'
                 }`}>
                   {grant.status}
                 </span>

@@ -4,7 +4,8 @@ const {
   getAllGrants,
   getGrantById,
   updateGrant,
-  deleteGrant
+  deleteGrant,
+  reviewGrant,
 } = require("../controllers/grant.controller");
 
 const router = express.Router();
@@ -15,4 +16,7 @@ router.get("/:id", getGrantById);
 router.put("/:id", updateGrant);
 router.delete("/:id", deleteGrant);
 
+router.put("/:id/review", reviewGrant);
+
 module.exports = router;
+

@@ -126,7 +126,11 @@ exports.acceptStudent = async (req, res) => {
       $set: { 
         className: classroom.name,
         classTeacherId: classroom.classTeacherId,
-        enrolledClassroomId: classroom._id
+        enrolledClassroomId: classroom._id,
+        currentClassroom: {
+          classroomId: classroom._id,
+          className: classroom.name
+        }
       },
       $unset: { pendingClassroomId: 1 }
     });
@@ -172,6 +176,7 @@ exports.removeStudent = async (req, res) => {
         student.enrolledClassroomId = undefined;
         student.classTeacherId = undefined;
         student.className = "";
+        student.currentClassroom = undefined;
         await student.save();
     }
 
@@ -203,6 +208,7 @@ exports.deleteClassroom = async (req, res) => {
         student.enrolledClassroomId = undefined;
         student.classTeacherId = undefined;
         student.className = "";
+        student.currentClassroom = undefined;
         await student.save();
       }
     }

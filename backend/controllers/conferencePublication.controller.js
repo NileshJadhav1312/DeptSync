@@ -1,9 +1,16 @@
 const ConferencePublication = require("../models/conferencePublication.model");
+const mongoose = require("mongoose");
 
 // Create
 async function createConferencePublication(req, res) {
   try {
-    const conferencePublication = await ConferencePublication.create(req.body);
+    const payload = { ...req.body };
+    if (payload.createdByModel === "Student") {
+      payload.approvalStatus = "Pending";
+    } else {
+      payload.approvalStatus = "Approved";
+    }
+    const conferencePublication = await ConferencePublication.create(payload);
     return res.status(201).json({ message: "Conference publication added successfully.", conferencePublication });
   } catch (error) {
     console.error("createConferencePublication error", error);
@@ -15,14 +22,28 @@ async function createConferencePublication(req, res) {
 async function getAllConferencePublications(req, res) {
   try {
     const { teacherId, studentId, departmentId, approvalStatus } = req.query;
-    let query = { isActive: true };
+    let query = { isActive: { $ne: false } };
     if (teacherId) query.teacherId = teacherId;
-    if (studentId) query.studentId = studentId;
+    if (studentId) {
+        try {
+            const sId = new mongoose.Types.ObjectId(studentId);
+            query.$or = [
+                { studentId: sId },
+                { createdById: sId }
+            ];
+        } catch (e) {
+            query.$or = [
+                { studentId: studentId },
+                { createdById: studentId }
+            ];
+        }
+    }
     if (departmentId) query.departmentId = departmentId;
     if (approvalStatus) query.approvalStatus = approvalStatus;
 
     const conferencePublications = await ConferencePublication.find(query)
-      .populate('studentId', 'prnNumber className')
+      .populate('teacherId', 'employeeId')
+      .populate('studentId', 'prnNumber className email')
       .sort({ conferenceDate: -1 });
     return res.status(200).json({ conferencePublications });
   } catch (error) {

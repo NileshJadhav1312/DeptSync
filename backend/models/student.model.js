@@ -80,6 +80,13 @@ const studentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Classroom",
   },
+  currentClassroom: {
+    classroomId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Classroom",
+    },
+    className: String,
+  },
   pendingClassroomId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Classroom",
@@ -99,6 +106,7 @@ const studentSchema = new mongoose.Schema({
   ],
   departmentUid: String,
   departmentName: String,
+  departmentCode: String,
   collegeName: {
     type: String,
     trim: true,
@@ -133,6 +141,18 @@ studentSchema.pre("validate", async function () {
     this.departmentUid = department.departmentUid;
     if (department.collegeName) {
       this.collegeName = department.collegeName;
+    }
+  }
+
+  // Pull classroom details automatically from enrolledClassroomId
+  if (
+    this.enrolledClassroomId &&
+    (this.isNew || this.isModified("enrolledClassroomId") || !this.className)
+  ) {
+    const Classroom = mongoose.model("Classroom");
+    const classroom = await Classroom.findById(this.enrolledClassroomId).lean();
+    if (classroom) {
+      this.className = classroom.name;
     }
   }
 });

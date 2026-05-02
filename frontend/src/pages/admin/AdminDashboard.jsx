@@ -9,7 +9,19 @@ import { getAllClassrooms } from "../../services/classroom";
 import CreateDepartmentModal from "../../components/admin/CreateDepartmentModal";
 import EditTeacherModal from "../../components/admin/EditTeacherModal";
 import TeacherDetailsModal from "../../components/admin/TeacherDetailsModal";
+import AddTeacherModal from "../../components/admin/AddTeacherModal";
 import ActivityDetailsModal from "../../components/teacher/ActivityDetailsModal";
+import ProjectsTable from "../../components/common/ProjectsTable";
+import { 
+  getProjects, 
+  getPatents, 
+  getCopyrights, 
+  getJournalPublications, 
+  getConferencePublications, 
+  getGrants,
+  getBookPublications,
+  getBookChapters
+} from "../../services/research";
 
 
 const emptyTeacher = {
@@ -27,14 +39,24 @@ export default function AdminDashboard() {
   const [departments, setDepartments] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [activities, setActivities] = useState([]);
+  const [allProjects, setAllProjects] = useState([]);
   const [classrooms, setClassrooms] = useState([]);
+  const [journals, setJournals] = useState([]);
+  const [conferences, setConferences] = useState([]);
+  const [patents, setPatents] = useState([]);
+  const [copyrights, setCopyrights] = useState([]);
+  const [grants, setGrants] = useState([]);
+  const [books, setBooks] = useState([]);
+  const [chapters, setChapters] = useState([]);
   const [isDepModalOpen, setIsDepModalOpen] = useState(false);
   const [isEditTeacherModalOpen, setIsEditTeacherModalOpen] = useState(false);
+  const [isAddTeacherModalOpen, setIsAddTeacherModalOpen] = useState(false);
   const [isViewTeacherModalOpen, setIsViewTeacherModalOpen] = useState(false);
   const [isViewActivityModalOpen, setIsViewActivityModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [isTeacherUpdating, setIsTeacherUpdating] = useState(false);
+  const [isTeacherAdding, setIsTeacherAdding] = useState(false);
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -45,6 +67,7 @@ export default function AdminDashboard() {
   const isTeachers = currentSection === "teachers";
   const isActivities = currentSection === "activities";
   const isStudents = currentSection === "students";
+  const isProjects = currentSection === "projects";
   const isReports = currentSection === "reports";
 
   useEffect(() => {
@@ -53,13 +76,66 @@ export default function AdminDashboard() {
 
   const refreshData = async () => {
     try {
-      const [departmentData, teacherData, activityData, classroomData] = await Promise.all([getDepartments(), getTeachers(), getActivities(), getAllClassrooms()]);
-      const nextDepartments = departmentData.departments || [];
-      setDepartments(nextDepartments);
-      setTeachers(teacherData.teachers || []);
-      setActivities(activityData.activities || []);
-      setClassrooms(classroomData.classrooms || []);
+      const [
+        deptData, 
+        teacherData, 
+        activityData, 
+        classroomData, 
+        projectData,
+        journalData,
+        confData,
+        patentData,
+        copyrightData,
+        grantData,
+        bookData,
+        chapterData
+      ] = await Promise.all([
+        getDepartments(),
+        getTeachers(),
+        getActivities(),
+        getAllClassrooms(),
+        getProjects({ approvalStatus: 'Approved' }),
+        getJournalPublications({ approvalStatus: 'Approved' }),
+        getConferencePublications({ approvalStatus: 'Approved' }),
+        getPatents({ approvalStatus: 'Approved' }),
+        getCopyrights({ approvalStatus: 'Approved' }),
+        getGrants({ approvalStatus: 'Approved' }),
+        getBookPublications(),
+        getBookChapters()
+      ]);
+
+      const ensureArray = (val, key) => {
+        if (!val) return [];
+        if (Array.isArray(val)) return val;
+        if (typeof val !== 'object') return [];
+        
+        // Priority 1: Exact key match
+        if (Array.isArray(val[key])) return val[key];
+        
+        // Priority 2: Standard 'data' wrapper
+        if (Array.isArray(val.data)) return val.data;
+        
+        // Priority 3: Search for ANY array property
+        const firstArray = Object.values(val).find(v => Array.isArray(v));
+        if (firstArray) return firstArray;
+
+        return [];
+      };
+
+      setDepartments(ensureArray(deptData, 'departments'));
+      setTeachers(ensureArray(teacherData, 'teachers'));
+      setActivities(ensureArray(activityData, 'activities'));
+      setClassrooms(ensureArray(classroomData, 'classrooms'));
+      setAllProjects(ensureArray(projectData, 'projects'));
+      setJournals(ensureArray(journalData, 'journalPublications'));
+      setConferences(ensureArray(confData, 'conferencePublications'));
+      setPatents(ensureArray(patentData, 'patents'));
+      setCopyrights(ensureArray(copyrightData, 'copyrights'));
+      setGrants(ensureArray(grantData, 'grants'));
+      setBooks(ensureArray(bookData, 'bookPublications'));
+      setChapters(ensureArray(chapterData, 'bookChapters'));
     } catch (err) {
+      console.error("Admin refreshData error:", err);
       setError(err?.response?.data?.message || "Unable to load admin data.");
     }
   };
@@ -74,6 +150,25 @@ export default function AdminDashboard() {
       await refreshData();
     } catch (err) {
       throw err;
+    }
+  };
+
+  const handleCreateTeacher = async (payload) => {
+    setIsTeacherAdding(true);
+    try {
+      await createTeacher({
+        ...payload,
+        createdBy: user?.id || user?.username,
+      });
+      setSuccess("Teacher added successfully!");
+      await refreshData();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to add teacher.");
+      setTimeout(() => setError(""), 3000);
+      throw err;
+    } finally {
+      setIsTeacherAdding(false);
     }
   };
 
@@ -135,17 +230,21 @@ export default function AdminDashboard() {
 
   const stats = useMemo(() => {
     const teachersCountFromDepartments = departments.reduce((sum, d) => sum + (d.totalTeachers || 0), 0);
+    const studentCount = classrooms.reduce((sum, c) => sum + (c.enrolledStudents?.length || 0), 0);
+    
     return [
-      { title: "Total Departments", value: departments.length, helper: "All departments" },
-      { title: "Total Teachers", value: teachers.length || teachersCountFromDepartments, helper: "Teachers assigned" },
+      { title: "Departments", value: departments.length, helper: "Academic Units", onClick: () => navigate("/admin/departments"), className: "border-l-indigo-500" },
+      { title: "Teachers", value: teachers.length || teachersCountFromDepartments, helper: "Faculty Members", onClick: () => navigate("/admin/teachers"), className: "border-l-purple-500" },
+      { title: "Students", value: studentCount, helper: "Enrolled Students", onClick: () => navigate("/admin/students"), className: "border-l-emerald-500" },
     ];
-  }, [departments, teachers.length]);
+  }, [departments, teachers.length, classrooms, navigate]);
 
   const sectionTitle = {
     dashboard: "Admin Dashboard",
     departments: "Departments",
     teachers: "Teachers",
     activities: "Activities",
+    projects: "Projects",
     students: "Students",
     reports: "Reports",
   }[currentSection] || "Admin Dashboard";
@@ -155,6 +254,7 @@ export default function AdminDashboard() {
     departments: "Create departments and manage academic units.",
     teachers: "View all teachers and add new accounts.",
     activities: "View and manage all departmental activities.",
+    projects: "View all approved student projects.",
     students: "View all students across all classrooms.",
     reports: "Quick insights from your current academic data.",
   }[currentSection] || "Manage departments and teachers.";
@@ -167,6 +267,14 @@ export default function AdminDashboard() {
           onClick={() => setIsDepModalOpen(true)}
         >
           Create Department
+        </button>
+      )}
+      {(isTeachers || isDashboard) && (
+        <button
+          className="btn-primary text-xs sm:text-sm px-3 sm:px-4 py-2"
+          onClick={() => setIsAddTeacherModalOpen(true)}
+        >
+          Add Teacher
         </button>
       )}
     </div>
@@ -201,6 +309,14 @@ export default function AdminDashboard() {
         isOpen={isViewTeacherModalOpen}
         onClose={() => setIsViewTeacherModalOpen(false)}
         teacher={selectedTeacher}
+      />
+
+      <AddTeacherModal
+        isOpen={isAddTeacherModalOpen}
+        onClose={() => setIsAddTeacherModalOpen(false)}
+        onSubmit={handleCreateTeacher}
+        departments={departments}
+        loading={isTeacherAdding}
       />
 
       <ActivityDetailsModal
@@ -522,6 +638,25 @@ export default function AdminDashboard() {
         </section>
       )}
 
+      {isProjects && (
+        <section className="mb-6 sm:mb-8">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <div>
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-900">Approved Projects</h3>
+              <p className="text-sm text-slate-500 mt-1">Review all projects that have been approved by coordinators.</p>
+            </div>
+            <div className="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+              {allProjects.filter(p => p.approvalStatus === "Approved").length} project{allProjects.filter(p => p.approvalStatus === "Approved").length !== 1 ? "s" : ""}
+            </div>
+          </div>
+          <ProjectsTable
+            projects={allProjects.filter(p => p.approvalStatus === "Approved")}
+            onEdit={null}
+            onDelete={null}
+          />
+        </section>
+      )}
+
       {isStudents && (
         <section className="mb-6 sm:mb-8">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
@@ -643,3 +778,4 @@ export default function AdminDashboard() {
     </DashboardLayout>
   );
 }
+

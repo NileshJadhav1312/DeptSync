@@ -20,8 +20,8 @@ export async function deleteAchievement(id) {
   return response.data;
 }
 
-export async function getDepartmentAchievements(departmentId) {
-  const response = await API.get(`/achievements/department/${departmentId}`);
+export async function getDepartmentAchievements(departmentId, params) {
+  const response = await API.get(`/achievements/department/${departmentId}`, { params });
   return response.data;
 }
 

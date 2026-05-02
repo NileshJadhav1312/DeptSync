@@ -4,68 +4,75 @@ export default function StudentAchievementDetailsModal({ isOpen, onClose, achiev
   if (!isOpen || !achievement) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity" onClick={onClose} />
-      
-      <div className="relative w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="relative p-8 bg-emerald-600 overflow-hidden shrink-0">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
-          <div className="relative flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/20 text-white backdrop-blur-sm mb-2">
-                {achievement.category} Achievement
-              </span>
-              <h2 className="text-2xl font-black text-white leading-tight">
-                {achievement.name}
-              </h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl max-h-[90vh] flex flex-col">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-900">Achievement Details</h2>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-6 overflow-y-auto space-y-4">
+          <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
+            <div className="col-span-2">
+              <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Achievement Name</span>
+              <span className="font-semibold text-slate-900 text-base">{achievement.name}</span>
             </div>
-            <button onClick={onClose} className="p-2 text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-all active:scale-90">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
+            <div>
+              <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Date</span>
+              <span className="font-semibold text-slate-900">{achievement.date ? new Date(achievement.date).toLocaleDateString() : "N/A"}</span>
+            </div>
+            <div>
+              <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Academic Year</span>
+              <span className="font-semibold text-slate-900">{achievement.academicYear}</span>
+            </div>
+            <div>
+              <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Level</span>
+              <span className="font-semibold text-slate-900">{achievement.level}</span>
+            </div>
+            <div>
+              <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Category</span>
+              <span className="font-semibold text-slate-900">{achievement.category}</span>
+            </div>
+            <div>
+              <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Achieved By</span>
+              <span className="font-semibold text-slate-900">{achievement.achievedByType}</span>
+            </div>
+            <div>
+              <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Organization</span>
+              <span className="font-semibold text-slate-900">{achievement.issuingOrganization || "N/A"}</span>
+            </div>
+            <div>
+              <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs">Certificate Number</span>
+              <span className="font-semibold text-slate-900">{achievement.certificateNumber || "N/A"}</span>
+            </div>
+          </div>
+
+          <div className="pt-2">
+             <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs mb-1">Description</span>
+             <p className="text-slate-800 bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm mt-1 whitespace-pre-wrap">{achievement.description || "No description provided."}</p>
+          </div>
+
+          <div className="pt-4 border-t border-slate-100">
+             <span className="block font-medium text-slate-500 uppercase tracking-wide text-xs mb-1">Review Status</span>
+             <div className={`p-3 rounded-lg border text-sm ${
+               achievement.approvalStatus === 'Approved' ? 'bg-green-50 border-green-100 text-green-700' :
+               achievement.approvalStatus === 'Rejected' ? 'bg-red-50 border-red-100 text-red-700' :
+               'bg-amber-50 border-amber-100 text-amber-700'
+             }`}>
+                <p className="font-bold">{achievement.approvalStatus || 'Pending'}</p>
+                {achievement.coordinatorComment && <p className="mt-1 italic">{achievement.coordinatorComment}</p>}
+             </div>
           </div>
         </div>
 
-        <div className="p-8 overflow-y-auto custom-scrollbar space-y-8 text-slate-700">
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 text-slate-700">
-            <InfoCard icon={<CalendarIcon/>} label="Date" value={achievement.date ? new Date(achievement.date).toLocaleDateString("en-GB", { day: 'numeric', month: 'short', year: 'numeric' }) : "N/A"} />
-            <InfoCard icon={<YearIcon/>} label="Academic Year" value={achievement.academicYear} />
-            <InfoCard icon={<LevelIcon/>} label="Level" value={achievement.level} />
-            <InfoCard icon={<RoleIcon/>} label="Role" value={achievement.achievedByType} color="text-emerald-600 bg-emerald-50" />
-            <InfoCard icon={<OrgIcon/>} label="Organization" value={achievement.issuingOrganization || "N/A"} />
-            <InfoCard icon={<CertIcon/>} label="Cert No." value={achievement.certificateNumber || "N/A"} />
-          </div>
-
-          <div className="space-y-3">
-             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none"><span className="w-4 h-[1px] bg-slate-200" />Description</h3>
-             <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 italic-last-row"><p className="text-slate-700 leading-relaxed text-sm whitespace-pre-wrap">{achievement.description || "No description provided."}</p></div>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 select-none"><span className="w-4 h-[1px] bg-slate-200" />Review Status</h3>
-            <div className={`p-6 rounded-2xl border border-l-4 flex flex-col gap-4 shadow-sm ${
-              achievement.approvalStatus === "Approved" ? "bg-green-50/50 border-green-200 border-l-green-500" :
-              achievement.approvalStatus === "Rejected" ? "bg-red-50/50 border-red-200 border-l-red-500" :
-              "bg-amber-50/50 border-amber-200 border-l-amber-500"
-            }`}>
-               <div className="flex items-center gap-3">
-                  <p className={`font-bold select-all ${
-                    achievement.approvalStatus === "Approved" ? "text-green-700" :
-                    achievement.approvalStatus === "Rejected" ? "text-red-700" :
-                    "text-amber-700"
-                  }`}>{achievement.approvalStatus || "Pending Review"}</p>
-               </div>
-               {achievement.coordinatorComment && (
-                 <p className="text-sm text-slate-600 italic pl-4 border-l-2 border-slate-200">
-                    "{achievement.coordinatorComment}"
-                 </p>
-               )}
-            </div>
-          </div>
-        </div>
-
-        <div className="p-6 border-t border-slate-100 bg-white flex justify-end shrink-0">
-          <button onClick={onClose} className="px-8 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all">
-            Close View
+        <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end shrink-0">
+          <button onClick={onClose} className="px-5 py-2.5 text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition">
+            Close
           </button>
         </div>
       </div>

@@ -1,8 +1,17 @@
 const Patent = require("../models/patent.model");
+const mongoose = require("mongoose");
 
 async function createPatent(req, res) {
   try {
-    const patent = await Patent.create(req.body);
+    const payload = { ...req.body };
+    // If it's a student, set status to Pending. If teacher, Approved.
+    if (payload.createdByModel === "Student") {
+      payload.approvalStatus = "Pending";
+    } else if (payload.createdByModel === "Teacher") {
+      payload.approvalStatus = "Approved";
+    }
+
+    const patent = await Patent.create(payload);
     return res.status(201).json({ message: "Patent added successfully.", patent });
   } catch (error) {
     console.error("createPatent error", error);
@@ -12,13 +21,30 @@ async function createPatent(req, res) {
 
 async function getAllPatents(req, res) {
   try {
-    const { teacherId, departmentId } = req.query;
-    let query = { isActive: true };
+    const { teacherId, studentId, departmentId, approvalStatus } = req.query;
+    let query = { isActive: { $ne: false } }; if (approvalStatus) query.approvalStatus = approvalStatus;
 
     if (teacherId) query.teacherId = teacherId;
+    if (studentId) {
+        try {
+            const sId = new mongoose.Types.ObjectId(studentId);
+            query.$or = [
+                { studentId: sId },
+                { createdById: sId }
+            ];
+        } catch (e) {
+            query.$or = [
+                { studentId: studentId },
+                { createdById: studentId }
+            ];
+        }
+    }
     if (departmentId) query.departmentId = departmentId;
 
-    const patents = await Patent.find(query).sort({ createdAt: -1 });
+    const patents = await Patent.find(query)
+      .populate("teacherId", "employeeId")
+      .populate("studentId", "prnNumber className email")
+      .sort({ createdAt: -1 });
     return res.status(200).json({ patents });
   } catch (error) {
     console.error("getAllPatents error", error);
@@ -52,9 +78,24 @@ async function deletePatent(req, res) {
   }
 }
 
+async function reviewPatent(req, res) {
+  try {
+    const { id } = req.params;
+    const { approvalStatus, coordinatorComment, approvedBy } = req.body;
+    if (!["Pending", "Approved", "Rejected"].includes(approvalStatus)) return res.status(400).json({ message: "Invalid approval status." });
+    const item = await Patent.findByIdAndUpdate(id, { approvalStatus, coordinatorComment, approvedBy }, { new: true });
+    if (!item) return res.status(404).json({ message: "Patent not found" });
+    return res.status(200).json({ item });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to review Patent.", error: error.message });
+  }
+}
+
 module.exports = {
   createPatent,
   getAllPatents,
   updatePatent,
-  deletePatent
+  deletePatent,
+  reviewPatent
 };
+

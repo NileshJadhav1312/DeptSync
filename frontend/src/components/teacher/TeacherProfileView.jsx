@@ -9,6 +9,7 @@ const DESIGNATION_OPTIONS = [
   "Junior Professor",
   "NAAC Coordinator",
   "Research Coordinator",
+  "Project Coordinator",
   "Class Teacher",
   "Other",
 ];
@@ -111,7 +112,7 @@ function Field({ label, value }) {
   );
 }
 
-export default function TeacherProfileView({ profile, onUpdate, loading }) {
+export default function TeacherProfileView({ profile, contributions, onUpdate, loading }) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState(
     profile ? buildFormData(profile) : createInitialFormData(),
@@ -449,33 +450,6 @@ export default function TeacherProfileView({ profile, onUpdate, loading }) {
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700">
-                Total Experience Years
-              </label>
-              <input
-                type="number"
-                min="0"
-                name="totalExperienceYears"
-                value={formData.totalExperienceYears}
-                onChange={handleInputChange}
-                className="input mt-1"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700">
-                Total Experience Months
-              </label>
-              <input
-                type="number"
-                min="0"
-                name="totalExperienceMonths"
-                value={formData.totalExperienceMonths}
-                onChange={handleInputChange}
-                className="input mt-1"
-                disabled
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700">
                 Department Name
               </label>
               <input
@@ -616,6 +590,40 @@ export default function TeacherProfileView({ profile, onUpdate, loading }) {
           </div>
         </div>
       )}
+      {/* Contributions Overview Section */}
+      <div className="border border-slate-500 rounded-lg card p-6 bg-white">
+        <div className="border-b border-slate-500 pb-4 mb-6 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <svg className="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Contributions Overview
+            </h3>
+            <p className="text-sm text-slate-500 mt-1">Snapshot of your academic and research records</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {[
+            { label: "Activities", value: contributions?.activities, color: "bg-blue-50 text-blue-700 border-blue-200" },
+            { label: "Research Papers", value: contributions?.researchPapers, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+            { label: "Grants", value: contributions?.grants, color: "bg-cyan-50 text-cyan-700 border-cyan-200" },
+            { label: "Achievements", value: contributions?.achievements, color: "bg-purple-50 text-purple-700 border-purple-200" },
+            { label: "Consultancies", value: contributions?.consultancies, color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+            { label: "Committees", value: contributions?.committees, color: "bg-slate-50 text-slate-700 border-slate-200" },
+            { label: "Editorial", value: contributions?.editorial, color: "bg-zinc-50 text-zinc-700 border-zinc-200" },
+            { label: "Patents", value: contributions?.patents, color: "bg-amber-50 text-amber-700 border-amber-200" },
+            { label: "Copyrights", value: contributions?.copyrights, color: "bg-orange-50 text-orange-700 border-orange-200" },
+            { label: "Projects", value: contributions?.projects, color: "bg-violet-50 text-violet-700 border-violet-200" }
+          ].map((item, i) => (
+            <div key={i} className={`p-2 rounded-lg border ${item.color} flex flex-col items-center justify-center text-center transition-all hover:shadow-md hover:scale-[1.02] cursor-default`}>
+              <span className="text-xl font-black">{item.value || 0}</span>
+              <span className="text-[9px] font-bold uppercase tracking-tight opacity-90 leading-tight">{item.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

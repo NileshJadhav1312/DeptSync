@@ -29,7 +29,6 @@ app.use("/api/classrooms", require("./routes/classroom.routes"));
 // New Research & Professional Activity Routes
 app.use("/api/book-publications", require("./routes/bookPublication.routes"));
 app.use("/api/committees", require("./routes/committee.routes"));
-app.use("/api/research-papers", require("./routes/researchPaper.routes"));
 app.use("/api/grants", require("./routes/grant.routes"));
 app.use("/api/editorial-boards", require("./routes/editorialBoard.routes"));
 app.use("/api/consultancies", require("./routes/consultancy.routes"));
@@ -38,6 +37,7 @@ app.use("/api/conference-publications", require("./routes/conferencePublication.
 app.use("/api/book-chapters", require("./routes/bookChapter.routes"));
 app.use("/api/patents", require("./routes/patent.routes"));
 app.use("/api/copyrights", require("./routes/copyright.routes"));
+app.use("/api/projects", require("./routes/project.routes"));
 
 app.use("/api", require("./routes/testRoutes"));
 

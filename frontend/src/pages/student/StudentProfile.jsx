@@ -9,6 +9,15 @@ import {
   updateStudentProfile,
   changeStudentPassword,
 } from "../../services/profile";
+import {
+  getJournalPublications,
+  getConferencePublications,
+  getPatents,
+  getCopyrights,
+  getProjects,
+} from "../../services/research";
+import { getAchievements } from "../../services/achievement";
+import { getActivities } from "../../services/activity";
 
 export default function StudentProfilePage() {
   const { user, logout } = useAuth();
@@ -16,6 +25,7 @@ export default function StudentProfilePage() {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [contributions, setContributions] = useState({});
 
   useEffect(() => {
     if (user?.id) {
@@ -26,10 +36,45 @@ export default function StudentProfilePage() {
   const fetchProfile = async () => {
     setLoading(true);
     try {
-      const response = await getStudentProfile(user.id);
-      setProfileData(response.student);
+      const [
+        profileRes,
+        journals,
+        conferences,
+        patents,
+        copyrights,
+        projects,
+        achievements,
+        activities
+      ] = await Promise.all([
+        getStudentProfile(user.id),
+        getJournalPublications({ studentId: user.id }),
+        getConferencePublications({ studentId: user.id }),
+        getPatents({ studentId: user.id }),
+        getCopyrights({ studentId: user.id }),
+        getProjects({ studentId: user.id }),
+        getAchievements(),
+        getActivities({ studentId: user.id })
+      ]);
+
+      setProfileData(profileRes.student);
+
+      // Filter achievements manually if service doesn't support studentId
+      const myAchievements = achievements.achievements?.filter(a => 
+        a.achievedBy?._id === user.id || a.achievedBy === user.id
+      ) || [];
+
+      setContributions({
+        journals: journals.journalPublications?.length || 0,
+        conferences: conferences.conferencePublications?.length || 0,
+        researchPapers: (journals.journalPublications?.length || 0) + (conferences.conferencePublications?.length || 0),
+        patents: patents.patents?.length || 0,
+        copyrights: copyrights.copyrights?.length || 0,
+        projects: projects.projects?.length || 0,
+        achievements: myAchievements.length,
+        activities: activities.activities?.length || 0
+      });
     } catch (err) {
-      console.error("Failed to load profile.", err);
+      console.error("Failed to load profile or contributions.", err);
     } finally {
       setLoading(false);
     }
@@ -71,6 +116,7 @@ export default function StudentProfilePage() {
       <div className="max-w-4xl">
         <StudentProfileView
           profile={profileData}
+          contributions={contributions}
           onUpdate={handleProfileUpdate}
           loading={loading}
         />

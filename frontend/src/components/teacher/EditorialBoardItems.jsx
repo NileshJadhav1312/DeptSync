@@ -90,13 +90,114 @@ export function EditorialBoardsTable({ items, onEdit, onDelete }) {
 
 
 export function EditorialBoardFormModal({ isOpen, onClose, onSubmit, initialData }) {
-  const [formData, setFormData] = useState({ academicYear: "", boardName: "", role: "Reviewer", level: "National", responsibilities: "" });
+  const [formData, setFormData] = useState({
+    academicYear: "",
+    boardName: "",
+    role: "Reviewer",
+    level: "National",
+    responsibilities: ""
+  });
   const [loading, setLoading] = useState(false);
-  useEffect(() => { if (isOpen && initialData) setFormData(initialData); else if (isOpen && !initialData) setFormData({ academicYear: "", boardName: "", role: "Reviewer", level: "National", responsibilities: "" }); }, [isOpen, initialData]);
+
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setFormData(initialData);
+    } else if (isOpen && !initialData) {
+      setFormData({
+        academicYear: "",
+        boardName: "",
+        role: "Reviewer",
+        level: "National",
+        responsibilities: ""
+      });
+    }
+  }, [isOpen, initialData]);
+
   if (!isOpen) return null;
+
   const hC = (e) => setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
-  const hS = async (e) => { e.preventDefault(); setLoading(true); try { await onSubmit(formData); onClose(); } catch (err) { alert(err.message); } finally { setLoading(false); } };
+
+  const hS = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await onSubmit(formData);
+      onClose();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"><div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} /><div className="relative w-full max-w-4xl bg-white rounded-[2rem] shadow-2xl max-h-[90vh] flex flex-col overflow-hidden"><h2 className="text-2xl font-bold mb-6">Editorial Board Entry</h2><form onSubmit={hS} className="space-y-4 shadow-none"><input required name="boardName" value={formData.boardName} onChange={hC} className="input" placeholder="Board / Journal Name" /><div className="grid grid-cols-2 gap-4"><select name="role" value={formData.role} onChange={hC} className="input"><option value="Editor-in-Chief">Editor-in-Chief</option><option value="Associate Editor">Associate Editor</option><option value="Reviewer">Reviewer</option><option value="Editorial Board Member">Editorial Board Member</option></select><select name="level" value={formData.level} onChange={hC} className="input"><option value="Local">Local</option><option value="National">National</option><option value="International">International</option></select></div><input required name="academicYear" value={formData.academicYear} onChange={hC} className="input" placeholder="Academic Year" /><div className="flex justify-end gap-2 pt-4"><button type="button" onClick={onClose} className="btn-secondary">Cancel</button><button type="submit" disabled={loading} className="btn-primary">Save Entry</button></div></form></div></div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl flex flex-col my-4 max-h-[90vh] overflow-hidden">
+        <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-white rounded-t-3xl">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">{initialData ? "Edit Editorial Board Entry" : "Add Editorial Board Entry"}</h2>
+            <p className="text-sm text-slate-500 mt-1">Provide details of your editorial board membership or reviewer role.</p>
+          </div>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-8 overflow-y-auto flex-1 scrollbar-thin">
+          <form id="editorialBoardForm" onSubmit={hS} className="space-y-10">
+            {/* Section 1: Basic Information */}
+            <div className="space-y-6">
+              <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                Basic Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="md:col-span-3">
+                  <label className="text-xs font-bold text-slate-500 mb-2 block">Board / Journal Name <span className="text-red-500">*</span></label>
+                  <input required name="boardName" value={formData.boardName} onChange={hC} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-medium" placeholder="Enter board or journal name..." />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 mb-2 block">Academic Year <span className="text-red-500">*</span></label>
+                  <input required name="academicYear" value={formData.academicYear} onChange={hC} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none transition-all font-medium" placeholder="2023-24" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 mb-2 block">Role <span className="text-red-500">*</span></label>
+                  <select name="role" value={formData.role} onChange={hC} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none transition-all font-medium">
+                    <option value="Editor-in-Chief">Editor-in-Chief</option>
+                    <option value="Associate Editor">Associate Editor</option>
+                    <option value="Reviewer">Reviewer</option>
+                    <option value="Editorial Board Member">Editorial Board Member</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 mb-2 block">Level <span className="text-red-500">*</span></label>
+                  <select name="level" value={formData.level} onChange={hC} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none transition-all font-medium">
+                    <option value="Local">Local</option>
+                    <option value="National">National</option>
+                    <option value="International">International</option>
+                  </select>
+                </div>
+                <div className="md:col-span-4">
+                  <label className="text-xs font-bold text-slate-500 mb-2 block">Responsibilities / Details</label>
+                  <textarea name="responsibilities" value={formData.responsibilities} onChange={hC} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl h-32 text-sm font-medium outline-none transition-all" placeholder="Briefly describe your responsibilities..." />
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div className="p-8 border-t border-slate-100 bg-slate-50/50 rounded-b-3xl flex justify-end gap-4 shrink-0">
+          <button type="button" onClick={onClose} disabled={loading} className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 bg-white border border-slate-200 shadow-sm rounded-2xl transition-all">
+            Cancel
+          </button>
+          <button type="submit" form="editorialBoardForm" disabled={loading} className="px-8 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 rounded-2xl transition-all active:scale-95 min-w-[180px]">
+            {loading ? "Saving..." : initialData ? "Update Entry" : "Save Entry"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

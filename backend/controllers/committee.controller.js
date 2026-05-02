@@ -61,14 +61,16 @@ async function createCommittee(req, res) {
 async function getAllCommittees(req, res) {
   try {
     const { teacherId, departmentId, year, level } = req.query;
-    let query = { isActive: true };
+    let query = { isActive: { $ne: false } };
 
     if (teacherId) query.teacherId = teacherId;
     if (departmentId) query.departmentId = departmentId;
     if (year) query.year = year;
     if (level) query.level = level;
 
-    const committees = await Committee.find(query).sort({ year: -1 });
+    const committees = await Committee.find(query)
+      .populate("teacherId", "employeeId")
+      .sort({ year: -1 });
     return res.status(200).json({ committees });
   } catch (error) {
     console.error("getAllCommittees error", error);
