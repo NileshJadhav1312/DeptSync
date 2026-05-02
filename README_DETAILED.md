@@ -78,33 +78,49 @@ Agile’s incremental delivery acts as a natural risk mitigation tool.
 
 ### 3.1 Functional Requirements
 
-#### Module 1: User Authentication & Profile
-*   **FR1.1**: Role-based access control (RBAC) for Admin, Teacher, and Student.
-*   **FR1.2**: Department-specific registration and classroom joining logic.
+#### Module 1: User Authentication & Profile (Identity Management)
+The system implements a multi-tenant authentication strategy to distinguish between different academic roles.
+*   **FR1.1: Role-Based Access Control (RBAC)**: Using **JSON Web Tokens (JWT)**, the system enforces strict authorization. 
+    *   **Students** have access only to their own submissions and classroom activities.
+    *   **Teachers** can access department-wide data for review but are restricted from administrative settings.
+    *   **Admins** have full system visibility, including user management and data audits.
+*   **FR1.2: Department-Specific Logic**: To prevent data contamination, the system uses unique **Department UIDs**. Students must join a department and an academic classroom using unique codes, ensuring that their research contributions are correctly mapped to their respective faculty coordinators.
 
-#### Module 2: Research Management (Contribution Side)
-*   **FR2.1**: Students can upload details for Journals, Patents, and Copyrights.
-*   **FR2.2**: Support for multiple indexing types (Scopus, IEEE, UGC Care).
-*   **FR2.3**: Uploading of supporting documents/proofs for each contribution.
+#### Module 2: Research Management (The Contribution Engine)
+This is the core data-ingestion layer of DeptSync.
+*   **FR2.1: Specialized Submission Forms**: Each research type (Journal, Patent, Copyright, Grant) has a tailored form that enforces specific academic metadata (e.g., ISSN/ISBN for journals, Application Numbers for patents).
+*   **FR2.2: Advanced Indexing Support**: The system provides native support for categorizing publications based on global standards such as **Scopus, IEEE, and UGC Care**, allowing for accurate quartile (Q1-Q4) and impact factor tracking.
+*   **FR2.3: Evidence-Based Validation**: Every entry requires the upload of a **Supporting Document (Proof)**. The system manages these as cloud-stored assets, ensuring that faculty can verify the validity of a claim without physical paperwork.
 
-#### Module 3: Academic Management (Project Side)
-*   **FR3.1**: Major/Mini/Research project tracking.
-*   **FR3.2**: Group project support with member identification.
+#### Module 3: Academic Management (Project & Milestone Tracking)
+This module tracks the practical application of technical knowledge.
+*   **FR3.1: Academic Project Categorization**: Supports tracking of **Major Projects, Mini Projects, and Research Internships**, capturing abstracts, guide names, and funding details.
+*   **FR3.2: Relational Member Mapping**: For group projects, the system allows for the identification of all team members. This relational data ensures that a single project is correctly attributed to multiple student portfolios simultaneously.
 
-#### Module 4: Approval Workflow (The "Sync" Logic)
-*   **FR4.1**: Teachers view pending submissions from their assigned department/classroom.
-*   **FR4.2**: Decision-making interface (Approve/Reject) with comment fields.
-*   **FR4.3**: Real-time status updates on student dashboards.
+#### Module 4: Approval Workflow (The Synchronization Logic)
+This module manages the state transitions of academic data.
+*   **FR4.1: Aggregated Pending Queues**: Teachers are presented with a "Review Queue" filtered by their department and classroom. This prevents "Information Overload" and ensures they only see submissions relevant to them.
+*   **FR4.2: Feedback & Decision Interface**: Faculty can approve or reject submissions. In case of rejection, the system enforces a "Coordinator Comment" requirement, providing students with clear feedback for revision.
+*   **FR4.3: Real-Time Synchronization**: Status changes (Pending -> Approved) are instantly reflected on the student dashboard through efficient state management, eliminating the need for manual follow-ups.
 
-#### Module 5: Admin Panel & Analytics
-*   **FR5.1**: Global view of all approved research for department reporting.
-*   **FR5.2**: User management and department configuration.
+#### Module 5: Admin Panel & Analytics (Institutional Oversight)
+*   **FR5.1: Aggregated Reporting**: Admins can generate department-wide summaries. The system uses MongoDB aggregation pipelines to calculate totals for publications, patents, and projects, which are essential for **NAAC and NIRF accreditation**.
+*   **FR5.2: System Governance**: Admins can manage the user lifecycle (activating/deactivating accounts) and configure department-wide parameters like academic years and designation options.
 
 ### 3.2 Non-functional Requirements
-*   **3.2.1 Security**: JWT-based session management and password hashing (Bcrypt).
-*   **3.2.2 Performance**: Optimized MongoDB queries using indexing for faster dashboard loading.
-*   **3.2.3 Usability**: Modern, responsive UI built with Tailwind CSS for mobile and desktop use.
-*   **3.2.4 Reliability**: Mongoose middleware for data validation to prevent partial record saving.
+
+*   **3.2.1 Security (Data Protection)**:
+    *   **Encryption**: All passwords are encrypted using **Bcrypt** with a salt factor of 10.
+    *   **Session Management**: Stateless JWT authentication ensures that user sessions are secure and scalable across multiple server instances.
+*   **3.2.2 Performance (Scalability)**:
+    *   **Indexing Strategy**: We implement compound indexes on `departmentId` and `studentId` fields in MongoDB, ensuring that dashboard queries remain sub-second even as the database grows to thousands of records.
+    *   **Data Retrieval**: Use of `Lean()` in Mongoose queries to bypass document hydration for read-only operations, significantly reducing memory overhead.
+*   **3.2.3 Usability (Human-Centered Design)**:
+    *   **Responsive UI**: Built with **Tailwind CSS**, the interface adapts seamlessly from mobile devices (for quick status checks) to large desktop monitors (for detailed data review).
+    *   **Design System**: A professional color palette and the **Inter** typography ensure high readability and a premium "Enterprise" feel.
+*   **3.2.4 Reliability (Data Integrity)**:
+    *   **Atomic Operations**: The system uses Mongoose middleware and pre-save hooks to ensure that data is validated against the schema before being committed to the database.
+    *   **Fail-Safe Querying**: Implementation of robust error handling in the API layer ensures that database connection issues or malformed requests do not result in "Zombie Records" or partial data saving.
 
 ---
 
