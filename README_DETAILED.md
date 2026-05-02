@@ -44,17 +44,33 @@ While DeptSync provides a comprehensive management layer, the current version ha
 ## 2. SDLC Model Selection & Rationale
 
 ### 2.1 Chosen SDLC Model: Agile (Scrum)
-DeptSync utilizes the **Agile Scrum** framework.
+The development of DeptSync was executed using the **Agile Scrum** framework. This methodology was selected to handle the complexity of multi-role synchronization and the evolving nature of academic data requirements. The project was divided into **2-week Sprints**, each culminating in a functional increment of the platform.
+
+Key Scrum ceremonies implemented included:
+*   **Sprint Planning**: Defining the "Definition of Done" (DoD) for research modules like Journals and Patents.
+*   **Daily Stand-ups**: Ensuring synchronization between frontend components (React) and backend API development (Node.js).
+*   **Sprint Reviews**: Demonstrating progress to faculty stakeholders to ensure the "Approval Workflow" matched real-world departmental hierarchies.
 
 ### 2.2 Justification
-#### 2.2.1 Requirement Flexibility
-As the system is used by different departments, specific requirements for research fields often change. Agile allows us to refine our Mongoose schemas iteratively.
+
+#### 2.2.1 Requirement Flexibility (Handling Uncertainty)
+In an academic environment, the data fields required for research can vary significantly between departments (e.g., Computer Science vs. Mechanical Engineering). Traditional Waterfall models would have required a frozen "Requirement Specification" which is impractical for a dynamic DDMS.
+*   **Technical Agility**: Using Agile allowed us to refine our **Mongoose schemas** iteratively. For instance, we initially focused on basic Journal fields but later realized the need for specialized indexing tags (Scopus/UGC Care) and quartile rankings. Agile enabled these database migrations without disrupting the existing codebase.
+
 #### 2.2.2 Speed to Market (MVP Approach)
-We prioritized the "Journal Publication" and "Project" modules as the MVP to provide immediate value while other modules (Patents, Grants) were developed in subsequent sprints.
+The primary goal was to provide immediate value to the department. We adopted a **Minimum Viable Product (MVP)** strategy:
+*   **Core Sprints**: The first three sprints were dedicated to building the "Journal Publication" and "Major Project" modules, as these represent the highest volume of data in any academic cycle.
+*   **Incremental Expansion**: By launching the core MVP, the department could begin digitizing the most critical records while the development team worked on secondary modules like "Consultancies" and "Copyrights" in subsequent sprints. This ensured that the platform was "live" and generating data within weeks rather than months.
+
 #### 2.2.3 User-Centric Feedback Loop
-Continuous testing by students and faculty during development ensured the UI/UX was intuitive for users with varying technical expertise.
-#### 2.2.4 Risk Management
-By delivering features in 2-week increments, we identified database matching issues (like the `studentId` vs `createdById` inconsistency) early in the development cycle.
+A Department Data Management system is only effective if it is easy for non-technical faculty and busy students to use. 
+*   **Iterative Design**: After each sprint, we conducted usability testing with a pilot group of students and teachers. Feedback on the "Review Modal" and "Submission Forms" led to significant UI refinements—such as adding drag-and-drop support for proofs and simplifying the multi-step patent submission process. This feedback loop ensured that the final product was intuitive and required minimal training for the end-users.
+
+#### 2.2.4 Risk Management (Fail-Fast Logic)
+Agile’s incremental delivery acts as a natural risk mitigation tool. 
+*   **Early Issue Detection**: By delivering features in small increments, we identified a critical structural risk early in the project: the **"Inconsistent Ownership Mapping"** (where some legacy records used `studentId` while newer ones used `createdById`). 
+*   **Resolution Strategy**: Because this was caught in an early sprint review, we were able to refactor the backend controllers to use a **Polymorphic Query Pattern ($or query)** across all modules. If we had used a Waterfall approach, this inconsistency might only have been discovered during the final integration phase, leading to a massive and expensive redesign of the data layer. 
+*   **Continuous Quality**: Continuous integration and regular testing at the end of each sprint ensured that the "Sync Logic" between students and teachers remained robust as more research modules were added.
 
 ---
 
