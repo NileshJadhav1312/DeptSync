@@ -143,9 +143,20 @@ This module manages the state transitions of academic data.
 *   **HTTPS / TLS**: All external communication is encrypted over HTTPS using Transport Layer Security (TLS 1.3) to ensure data privacy.
 *   **WebSockets (Socket.io)**: (Optional) Employed for real-time dashboard updates and notification badges to enhance user responsiveness.
 
+### 3.4 Database Schema Design (Technical Deep-Dive)
+To ensure data integrity and high-performance querying, DeptSync utilizes a highly structured MongoDB schema with the following core entities:
+
+| Model | Primary Fields | Relationships |
+| :--- | :--- | :--- |
+| **User** | `name`, `email`, `password` (Hashed), `role` (Admin/Teacher/Student), `departmentId` | Parent of all activity records. |
+| **Journal** | `title`, `journalName`, `issn`, `indexing` (Scopus/IEEE), `impactFactor`, `proofDocument` (URL) | Linked to `studentId` and `approvedBy`. |
+| **Project** | `title`, `projectType` (Major/Mini), `abstract`, `members` (Array of IDs), `guideName` | Many-to-Many via members array. |
+| **Patent** | `title`, `applicationNumber`, `status` (Filed/Published/Granted), `dateOfFiling` | Linked to `createdById`. |
+| **Department**| `name`, `uid` (Unique Code), `coordinator` | Reference for all users and contributions. |
+
 ---
 
-## 4. System Design (UML)
+## 4. System Design (UML & Architecture)
 
 ### 4.1 Use Case Diagram
 ```mermaid
@@ -205,14 +216,31 @@ sequenceDiagram
     B-->>S: Notify Approval
 ```
 
+### 4.4 API Architecture & Endpoints
+The backend is organized into RESTful resource controllers. Below are the critical endpoints:
+
+| Method | Endpoint | Description | Auth Level |
+| :--- | :--- | :--- | :--- |
+| **POST** | `/api/auth/register` | User registration and role assignment. | Public |
+| **POST** | `/api/journals/create` | Student submits a new journal entry. | Student |
+| **GET** | `/api/journals/pending` | Fetch records requiring faculty review. | Teacher |
+| **PATCH** | `/api/journals/review/:id` | Approve or Reject a specific submission. | Teacher |
+| **GET** | `/api/admin/stats` | Aggregate department-wide research data. | Admin |
+
 ---
 
-## 5. GUI Design
+## 5. GUI Design & User Flow
 
-### 5.1 Login Page: Minimalist interface with role selection.
-### 5.2 Research Submission: Multi-step forms for complex data like Patents.
-### 5.3 Student Dashboard: Card-based statistics showing counts of approved vs pending items.
-### 5.4 Teacher Review: Detailed modal views for comparing student data with uploaded proofs.
+### 5.1 Login & Dashboard Logic
+*   **Dynamic Routing**: The system detects the user's role from the JWT payload and redirects them to `/student/dashboard`, `/teacher/dashboard`, or `/admin/dashboard` automatically.
+*   **Aesthetic**: Uses a sleek **Dark Mode** option and a clean sidebar navigation for quick access to different research modules.
+
+### 5.2 User Interaction Flow: Submitting a Research Project
+1.  **Selection**: Student selects "Add Project" from the sidebar.
+2.  **Validation**: Form checks for required fields (Title, Abstract, Guide Name) in real-time.
+3.  **Collaborator Linking**: For group projects, the student enters PRN numbers of team members; the system automatically validates and links their profiles.
+4.  **Proof Attachment**: Student uploads a PDF of the project report (handled via Cloudinary).
+5.  **Submission**: Data is saved with status `Pending`; an automated notification is triggered for the assigned Faculty Guide.
 
 ---
 
