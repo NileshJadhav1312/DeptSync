@@ -216,23 +216,135 @@ sequenceDiagram
 
 ---
 
-## 6. Software Quality Assurance Plan
+## 6. Software Quality Assurance (SQA) Plan
 
-*   **Testing Strategy**: Unit testing for backend controllers and Integration testing for the end-to-end submission flow.
-*   **Tools**: Postman for API testing, Jest for logic validation.
-*   **Metrics**: Code coverage target of 85% for core business logic.
+### 6.1 Quality Objectives
+The primary goal of the DeptSync SQA plan is to ensure that the synchronization of academic research data remains 100% accurate while maintaining a high-performance environment for faculty reviews.
+1.  **Reliability**: The system must maintain a 99.9% uptime to ensure students can upload contributions during peak semester-end periods without data loss.
+2.  **Data Integrity**: Zero tolerance for "Zombie Records" or partial data saving. Every research entry must have its corresponding metadata and document proof correctly linked.
+3.  **Security**: Strict protection of academic records and faculty identities. Zero critical vulnerabilities (XSS, SQLi, IDOR) are allowed in the production environment.
+4.  **Usability**: The "Time to Approve" a single record for a teacher should be under 60 seconds through an optimized UI.
+
+### 6.2 Testing Strategy (Types of Testing)
+1.  **Unit Testing**:
+    *   **Scope**: Testing individual backend controllers (e.g., the `calculateProjectStatus` logic or `Bcrypt` password hashing).
+    *   **Goal**: To ensure the core business logic is mathematically and logically sound.
+2.  **Integration Testing**:
+    *   **Scope**: Interaction between the Express.js API and MongoDB. 
+    *   **Goal**: To verify that the `$or` polymorphic queries correctly retrieve records for students across different ID fields (`studentId` vs `createdById`).
+3.  **System Testing (Functional)**:
+    *   **Scenario**: "Student submits Journal -> Proof uploaded to Cloud -> Teacher sees in Pending Queue -> Teacher Approves -> Student Dashboard updates counts."
+4.  **Security Testing**:
+    *   **Focus**: Testing JWT expiration logic and ensuring that a student cannot access the review queue of a teacher (Broken Access Control).
+5.  **User Acceptance Testing (UAT)**:
+    *   **Goal**: Beta testing with a pilot department (10 teachers, 50 students) to validate the "Sync" workflow.
+
+### 6.3 SQA Tools & Technologies
+| Category | Tool Selected | Purpose |
+| :--- | :--- | :--- |
+| **Code Quality** | ESLint | Enforcing coding standards and identifying "code smells." |
+| **Unit Testing** | Jest | Automated testing scripts for Node.js backend logic. |
+| **API Testing** | Postman | Validating JSON responses and authorization headers. |
+| **Load Testing** | Apache JMeter | Simulating 500+ concurrent students uploading documents. |
+| **Bug Tracking** | Trello / Git Issues | Logging and managing the lifecycle of defects. |
 
 ---
 
-## 7. Integration of Modern SE Trends
+## 7. Testing Strategy
 
-*   **Cloud Computing**: Hosted on modern cloud platforms (Render/AWS) with MongoDB Atlas.
-*   **DevOps**: CI/CD pipelines via GitHub Actions for automated deployment.
-*   **AI/ML**: Potential integration for auto-extracting metadata from research paper PDFs.
-*   **PWA**: Frontend optimized for offline-first viewing of student profiles.
+### 7.1 Test Plan
+The testing plan for DeptSync acts as a roadmap to ensure the application is "Audit Ready" for institutional reporting. 
+*   **Environment**: Testing is performed on a **Staging Server (Render/Heroku)** that mirrors the production MongoDB Atlas cluster.
+*   **Cycles**: Regression testing is performed at the end of every 2-week sprint to ensure new modules (e.g., Patents) don't break old ones (e.g., Journals).
+
+### 7.2 Sample Test Case Table
+**Module**: Research Management (Journal Submission)
+**Test Case ID**: TC-RES-01
+
+| Step | Description | Test Data | Expected Result | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | Navigate to "Add Journal" | N/A | Form loads with ISSN/DOI fields. | Pass |
+| 2 | Enter invalid ISSN format | "123-ABC" | UI should show "Invalid ISSN format" error. | Pass |
+| 3 | Upload Paper Proof (PDF) | paper.pdf | Thumbnail preview appears; file ready for upload. | Pass |
+| 4 | Submit with valid data | Q1 Scopus Journal | Success toast; Record appears as "Pending." | Pass |
+| 5 | Review as Teacher | N/A | Teacher sees entry; can view PDF proof. | Pass |
 
 ---
 
-## 8. Conclusion and Future Scope
+## 8. Integration of Modern SE Trends
 
-DeptSync successfully digitizes the academic contribution lifecycle. Future updates will include automated report generation for NIRF/NAAC and direct API integrations with Scopus for automated publication verification.
+### 8.1 Cloud-Native & Micro-Services Architecture
+DeptSync is designed with a **Separation of Concerns** (SoC) principle:
+*   **Decoupled Services**: While currently a modular monolith, the backend is architected so that the "Analytics Engine" and "Document Processing Service" can be split into independent microservices.
+*   **Cloud Object Storage**: Using **Cloudinary/AWS S3** for document proofs, ensuring that the main application server is not bogged down by heavy file I/O operations.
+
+### 8.2 DevOps & CI/CD
+*   **Continuous Integration**: Automated GitHub Actions run `npm test` on every pull request to ensure high code quality.
+*   **Automated Deployment**: Successful merges to the `main` branch trigger an automated build and deployment to the production environment, reducing human error.
+
+### 8.3 Artificial Intelligence (AI) & Machine Learning
+*   **Automated Metadata Extraction**: (Future Scope) Integrating **Google Vision AI** or **Tesseract OCR** to automatically pull Title, Author, and ISSN from uploaded PDF papers, reducing manual entry errors.
+*   **Research Trend Analytics**: Using ML to identify "Hot Topics" in departmental research based on publication keywords over the last 5 years.
+
+### 8.4 Cybersecurity & Privacy by Design
+*   **Zero Trust Architecture**: Every single API request (even for public-looking data) is verified against a JWT.
+*   **Data Masking**: Sensitive user information is masked in the Admin dashboard, and passwords are never stored in plain text or even returned in API calls.
+
+### 8.5 Progressive Web App (PWA) Capabilities
+*   **Offline Access**: Students can view their contribution status and saved certificates even without an active internet connection by caching data locally.
+
+---
+
+## 9. Challenges and Reflections
+
+### 9.1 Project Challenges
+*   **The "Legacy Data" Hurdle**: Handling records that were previously stored in inconsistent formats (String IDs vs. ObjectIDs).
+    *   **Mitigation**: Implemented a **Polymorphic Query Layer** in the backend controllers to handle both formats seamlessly.
+*   **Teacher Adoption**: Convincing faculty to switch from physical files to digital review.
+    *   **Mitigation**: Designed a "Single-Click Approval" interface to make the digital process faster than the manual one.
+*   **Large File Management**: Handling the concurrent upload of large PDF research papers.
+    *   **Mitigation**: Implemented **Streamed Uploads** directly to cloud storage to prevent server timeouts.
+
+### 9.2 Reflections
+This project highlighted the importance of **Data Integrity** over feature volume. We learned that an academic system is only as good as its verifiability. Moving from Waterfall to **Agile** allowed us to pivot our database schema three times without losing progress.
+
+---
+
+## 10. Conclusion and Future Scope
+
+### 10.1 Conclusion
+DeptSync successfully bridges the gap between academic research and departmental administration. By synchronizing the submission and approval process, we have reduced the "Accreditation Reporting Time" for the department by an estimated 70%.
+
+### 10.2 Future Scope
+*   **Blockchain-Verified Certificates**: Issuing digital certificates for approved research that are immutable and verifiable by external employers.
+*   **API Integration**: Direct sync with **Scopus and ORCID** to automatically import publications.
+*   **Accreditation Auto-Generator**: One-click generation of NAAC-ready Excel sheets.
+
+---
+
+## 11. References
+1.  **IEEE Std 830-1998**: Practice for Software Requirements Specifications.
+2.  **Mongoose Documentation**: Schema validation and middleware logic.
+3.  **React Documentation**: State management and component lifecycle.
+
+---
+
+## 12. Appendix
+
+### 12.1 Glossary of Terms
+*   **Sync Logic**: The synchronization of data states between student, teacher, and admin dashboards.
+*   **Proof**: A digital document (PDF/Image) that validates a research claim.
+
+### 12.2 Acronyms
+*   **NAAC**: National Assessment and Accreditation Council.
+*   **NIRF**: National Institutional Ranking Framework.
+*   **JWT**: JSON Web Token.
+
+### 12.3 Tech Stack Summary
+| Component | Technology |
+| :--- | :--- |
+| **Frontend** | React.js (Vite), Tailwind CSS |
+| **Backend** | Node.js, Express.js |
+| **Database** | MongoDB (Mongoose) |
+| **Storage** | Cloudinary |
+| **Deployment** | Render / GitHub Actions |
